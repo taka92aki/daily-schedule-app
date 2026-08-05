@@ -78,11 +78,13 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .tb-menu{background:none;border:none;font-size:16px;color:inherit;opacity:.55;padding:4px 2px;flex-shrink:0;}
 .task-block.done .tb-menu{opacity:.8;}
 
-.rhandle,.rhandle-top{position:absolute;left:50%;transform:translateX(-50%);width:44px;height:14px;display:flex;align-items:center;justify-content:center;touch-action:none;}
-.rhandle{bottom:-9px;cursor:s-resize;}
-.rhandle-top{top:-9px;cursor:n-resize;}
-.rhandle::after,.rhandle-top::after{content:'';width:26px;height:4px;background:rgba(0,0,0,.15);border-radius:2px;}
-.task-block.done .rhandle::after,.task-block.done .rhandle-top::after{background:rgba(255,255,255,.35);}
+.rhandle,.rhandle-top{position:absolute;left:50%;transform:translateX(-50%);width:76px;height:34px;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:6;}
+.rhandle{bottom:-24px;cursor:s-resize;}
+.rhandle-top{top:-24px;cursor:n-resize;}
+.rhandle::after,.rhandle-top::after{content:'';width:34px;height:5px;background:rgba(0,0,0,.18);border-radius:3px;transition:background .1s,transform .1s;}
+.task-block.done .rhandle::after,.task-block.done .rhandle-top::after{background:rgba(255,255,255,.4);}
+.rhandle.rh-active::after,.rhandle-top.rh-active::after{background:var(--accent);transform:scaleX(1.15);}
+.rhandle.rh-active,.rhandle-top.rh-active{background:rgba(74,108,247,.1);border-radius:10px;}
 
 /* ── Task list (tab) ── */
 .task-ph{background:var(--bg3);padding:9px 14px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5;}
@@ -364,10 +366,12 @@ function renderSchedule(){
         attachLongPress(block,()=>openSlotMenu(si,entry));
 
         const rht=document.createElement('div');rht.className='rhandle-top';
+        if(resizingTop&&resizingTop.curSi===si)rht.classList.add('rh-active');
         attachResizeTopPointer(rht,si,span,entry.ti,!!entry.done);
         block.appendChild(rht);
 
         const rh=document.createElement('div');rh.className='rhandle';
+        if(resizing&&resizing.si===si)rh.classList.add('rh-active');
         attachResizePointer(rh,si,span);
         block.appendChild(rh);
 
@@ -466,17 +470,34 @@ function closeSheet(){
 }
 
 // ════ RESIZE (pointer-based, works for touch & mouse) ════
+// Drag tracking is bound to `document` (keyed by pointerId) rather than the
+// handle element itself: renderSchedule() rebuilds the DOM mid-drag whenever
+// the span changes, which would detach a handle-scoped listener and make the
+// gesture "stop responding" partway through. Document-level listeners survive
+// that re-render, so the drag keeps following the finger to the end.
 function attachResizePointer(handle,si,curSpan){
   handle.addEventListener('pointerdown',e=>{
+    if(resizing||resizingTop)return;
     e.stopPropagation();e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
-    resizing={si,date:currentDate,startY:e.clientY,origSpan:curSpan,curSpan};
-    const mv=ev=>onResizeMove(ev);
-    const up=ev=>{onResizeUp();handle.removeEventListener('pointermove',mv);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);};
-    handle.addEventListener('pointermove',mv);
-    handle.addEventListener('pointerup',up);
-    handle.addEventListener('pointercancel',up);
+    try{handle.setPointerCapture(e.pointerId);}catch(_){}
+    handle.classList.add('rh-active');
+    resizing={si,date:currentDate,startY:e.clientY,origSpan:curSpan,curSpan,pointerId:e.pointerId};
+    document.addEventListener('pointermove',onResizeMoveDoc);
+    document.addEventListener('pointerup',onResizeUpDoc);
+    document.addEventListener('pointercancel',onResizeUpDoc);
   });
+}
+function onResizeMoveDoc(e){
+  if(!resizing||e.pointerId!==resizing.pointerId)return;
+  e.preventDefault();
+  onResizeMove(e);
+}
+function onResizeUpDoc(e){
+  if(!resizing||e.pointerId!==resizing.pointerId)return;
+  document.removeEventListener('pointermove',onResizeMoveDoc);
+  document.removeEventListener('pointerup',onResizeUpDoc);
+  document.removeEventListener('pointercancel',onResizeUpDoc);
+  onResizeUp();
 }
 function onResizeMove(e){
   if(!resizing)return;
@@ -495,22 +516,35 @@ function onResizeMove(e){
 }
 function onResizeUp(){
   if(!resizing)return;
-  autoMergeDay(resizing.date);save();renderSchedule();renderTasks();
+  autoMergeDay(resizing.date);save();
   resizing=null;
+  renderSchedule();renderTasks();
 }
 
 function attachResizeTopPointer(handle,si,span,ti,done){
   handle.addEventListener('pointerdown',e=>{
+    if(resizing||resizingTop)return;
     e.stopPropagation();e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
+    try{handle.setPointerCapture(e.pointerId);}catch(_){}
+    handle.classList.add('rh-active');
     const endSi=si+span-1;
-    resizingTop={origSi:si,date:currentDate,startY:e.clientY,endSi,curSi:si,ti,done};
-    const mv=ev=>onResizeMoveTop(ev);
-    const up=ev=>{onResizeUpTop();handle.removeEventListener('pointermove',mv);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);};
-    handle.addEventListener('pointermove',mv);
-    handle.addEventListener('pointerup',up);
-    handle.addEventListener('pointercancel',up);
+    resizingTop={origSi:si,date:currentDate,startY:e.clientY,endSi,curSi:si,ti,done,pointerId:e.pointerId};
+    document.addEventListener('pointermove',onResizeMoveTopDoc);
+    document.addEventListener('pointerup',onResizeUpTopDoc);
+    document.addEventListener('pointercancel',onResizeUpTopDoc);
   });
+}
+function onResizeMoveTopDoc(e){
+  if(!resizingTop||e.pointerId!==resizingTop.pointerId)return;
+  e.preventDefault();
+  onResizeMoveTop(e);
+}
+function onResizeUpTopDoc(e){
+  if(!resizingTop||e.pointerId!==resizingTop.pointerId)return;
+  document.removeEventListener('pointermove',onResizeMoveTopDoc);
+  document.removeEventListener('pointerup',onResizeUpTopDoc);
+  document.removeEventListener('pointercancel',onResizeUpTopDoc);
+  onResizeUpTop();
 }
 function onResizeMoveTop(e){
   if(!resizingTop)return;
@@ -527,8 +561,9 @@ function onResizeMoveTop(e){
 }
 function onResizeUpTop(){
   if(!resizingTop)return;
-  autoMergeDay(resizingTop.date);save();renderSchedule();renderTasks();
+  autoMergeDay(resizingTop.date);save();
   resizingTop=null;
+  renderSchedule();renderTasks();
 }
 
 // ════ RENDER TASKS (tab) ════
