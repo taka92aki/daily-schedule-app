@@ -1,9 +1,6 @@
 {
-  "tasks": [
-    "テストタスク1",
-    "テストタスク2"
-  ],
+  "tasks": [],
   "schedule": {},
   "tasksDone": {},
-  "updatedAt": 1234567890000
+  "updatedAt": 0
 }
