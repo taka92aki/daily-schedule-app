@@ -1,4 +1,4 @@
-const CACHE = 'daily-schedule-v9';
+const CACHE = 'daily-schedule-v10';
 const ASSETS = [
   './mobile.html',
   './manifest.json',
@@ -21,6 +21,11 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Only manage this app's own same-origin files. Sync talks to
+  // raw.githubusercontent.com / api.github.com from pages in this SW's
+  // scope, and those requests must always hit the network fresh — never
+  // get intercepted/cached here, or sync would silently serve stale data.
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchPromise = fetch(e.request).then(res => {
