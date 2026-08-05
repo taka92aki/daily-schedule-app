@@ -840,8 +840,10 @@ function openSyncSheet(){
       </div>
       <div id="sync-token-area"></div>
       <div class="sync-msg" id="sync-msg"></div>
+      <button class="sync-forget" id="sync-hardreset-btn" style="margin-top:14px;">同期がうまく反映されない場合はこちら（アプリを強制更新）</button>
     </div>`;
   renderSyncTokenArea();
+  document.getElementById('sync-hardreset-btn').onclick=hardResetApp;
   document.getElementById('sync-pull-btn').onclick=onSyncPullClick;
   document.getElementById('sync-push-btn').onclick=onSyncPushClick;
   document.getElementById('overlay').classList.add('on');
@@ -918,6 +920,25 @@ async function onSyncPushClick(){
   }finally{
     btn.disabled=false;btn.textContent='⬆️ この端末の内容をアップロード';
   }
+}
+
+// iOSのホーム画面アプリはService Workerの更新に気づきにくいことがあるため、
+// 同期がおかしいときに手動でキャッシュ/SWを破棄して確実に最新版を取り直せる
+// 「強制更新」ボタン。ローカルのタスクデータ(localStorage)は消さない。
+async function hardResetApp(){
+  const btn=document.getElementById('sync-hardreset-btn');
+  if(btn){btn.disabled=true;btn.textContent='更新中…';}
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs)await r.unregister();
+    }
+    if('caches' in window){
+      const names=await caches.keys();
+      for(const n of names)await caches.delete(n);
+    }
+  }catch(_){/* ignore */}
+  location.reload(true);
 }
 
 // ════ INIT ════

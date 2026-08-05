@@ -950,8 +950,10 @@ function openSyncModal(){
       <button class="sync-btn push" id="sync-push-btn" ${pat?'':'disabled'}>⬆️ この端末の内容をアップロード</button>
     </div>
     <div id="sync-token-area"></div>
-    <div class="sync-msg" id="sync-msg"></div>`;
+    <div class="sync-msg" id="sync-msg"></div>
+    <button class="sync-forget" id="sync-hardreset-btn" style="margin-top:14px;">同期がうまく反映されない場合はこちら（アプリを強制更新）</button>`;
   renderSyncTokenArea();
+  document.getElementById('sync-hardreset-btn').onclick=hardResetApp;
   document.getElementById('sync-pull-btn').onclick=onSyncPullClick;
   document.getElementById('sync-push-btn').onclick=onSyncPushClick;
   document.getElementById('sync-overlay').classList.add('on');
@@ -1031,6 +1033,25 @@ async function onSyncPushClick(){
   }finally{
     btn.disabled=false;btn.textContent='⬆️ この端末の内容をアップロード';
   }
+}
+
+// 別ページ(mobile.html)が登録したService Workerのスコープがこのページも
+// 巻き込むことがあるため、同期がおかしいときに手動で破棄できるようにする。
+// ローカルのタスクデータ(localStorage)は消さない。
+async function hardResetApp(){
+  const btn=document.getElementById('sync-hardreset-btn');
+  if(btn){btn.disabled=true;btn.textContent='更新中…';}
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs)await r.unregister();
+    }
+    if('caches' in window){
+      const names=await caches.keys();
+      for(const n of names)await caches.delete(n);
+    }
+  }catch(_){/* ignore */}
+  location.reload(true);
 }
 
 // ════ INIT ════
