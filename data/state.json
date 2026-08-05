@@ -30,32 +30,32 @@
       "12": {
         "ti": 17,
         "span": 1,
-        "done": false
+        "done": true
       },
       "13": {
         "ti": 15,
         "span": 1,
-        "done": false
+        "done": true
       },
       "14": {
         "ti": 10,
         "span": 1,
-        "done": false
+        "done": true
       },
       "15": {
         "ti": 15,
         "span": 1,
-        "done": false
+        "done": true
       },
       "16": {
         "ti": 13,
         "span": 2,
-        "done": false
+        "done": true
       },
       "18": {
         "ti": 15,
         "span": 1,
-        "done": false
+        "done": true
       },
       "19": {
         "ti": 11,
@@ -133,5 +133,5 @@
     "2026-08-06": [],
     "2026-08-09": []
   },
-  "updatedAt": 1785906153294
+  "updatedAt": 1785916407037
 }
