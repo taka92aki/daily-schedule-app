@@ -2,7 +2,7 @@
   "name": "Daily Schedule",
   "short_name": "スケジュール",
   "description": "タスク管理・タイムスケジュールアプリ",
-  "start_url": "./index.html",
+  "start_url": "./mobile.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

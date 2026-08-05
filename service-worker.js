@@ -1,7 +1,6 @@
 const CACHE = 'daily-schedule-v6';
 const ASSETS = [
-  './',
-  './index.html',
+  './mobile.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',

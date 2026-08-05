@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ DAILY SCHEDULE v6</title>
+<style>
+:root {
+  --bg:#f4f6fb;--bg3:#f0f3fa;--border:#dde3f0;--border2:#edf0f8;
+  --text:#1e2a45;--text2:#7a8ba8;
+  --accent:#4a6cf7;--accent2:#6c47ff;
+  --green:#10b981;--red:#ef4444;
+  --row-h:30px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);user-select:none;}
+
+/* ── Header ── */
+.hdr{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;}
+.hdr-top{display:flex;align-items:center;gap:10px;padding:9px 0 6px;}
+.app-logo{font-size:17px;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.spacer{flex:1;}
+.hdr-btn{padding:4px 13px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text2);transition:all .15s;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(74,108,247,.05);}
+.hdr-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.week-nav{display:flex;align-items:center;gap:2px;}
+.warr{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:4px 7px;border-radius:5px;transition:all .15s;}
+.warr:hover{color:var(--accent);background:rgba(74,108,247,.07);}
+.dtabs{display:flex;gap:2px;flex:1;padding:2px 0 0;}
+.dtab{flex:1;padding:5px 2px;text-align:center;cursor:pointer;border-radius:7px 7px 0 0;border:1.5px solid transparent;border-bottom:none;transition:all .15s;position:relative;bottom:-1px;}
+.dtab .dn{font-weight:700;font-size:13px;color:var(--text2);}
+.dtab .dd{font-size:11px;color:#adb8cf;}
+.dtab:hover{background:var(--bg3);}
+.dtab.active{background:#fff;border-color:var(--border);border-bottom-color:#fff;}
+.dtab.active .dn{color:var(--accent);}
+.dtab.active .dd{color:var(--accent2);}
+.dtab.is-today .dn::after{content:'';display:block;width:5px;height:5px;background:var(--accent);border-radius:50%;margin:2px auto 0;}
+.dtab.past{opacity:.55;}
+.dtab.weekend .dn{color:var(--accent2);}
+
+/* ── Layout ── */
+.main{display:flex;height:calc(100vh - 90px);overflow:hidden;}
+
+/* ── Schedule panel ── */
+.sch-panel{flex:1;overflow-y:auto;background:#fff;min-width:200px;}
+.sch-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.sch-table thead th{
+  background:var(--bg3);color:var(--text2);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;padding:7px 4px;text-align:center;
+  border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:20;
+  position:relative;overflow:visible;
+}
+
+/* ── Column resize handles ── */
+.col-rh{position:absolute;right:-3px;top:0;width:6px;height:100%;cursor:col-resize;z-index:30;background:transparent;}
+.col-rh::after{content:'';position:absolute;left:50%;top:20%;width:2px;height:60%;background:var(--border);border-radius:1px;transition:background .15s;}
+.col-rh:hover::after,.col-rh.dragging::after{background:var(--accent);}
+.panel-rh{width:6px;flex-shrink:0;cursor:col-resize;background:var(--border);transition:background .15s;}
+.panel-rh:hover,.panel-rh.dragging{background:var(--accent);}
+
+/* ── Slot rows ── */
+.slot-row td{border-bottom:1px solid var(--border2);padding:0 3px;vertical-align:middle;height:var(--row-h);font-size:13px;}
+.no-cell{text-align:center;color:var(--text2);font-size:11px;font-weight:700;}
+.no-input{width:100%;height:22px;border:1px solid transparent;border-radius:4px;text-align:center;font-size:11px;font-weight:700;color:var(--text2);background:transparent;outline:none;padding:0;cursor:pointer;font-family:inherit;}
+.no-input:hover{border-color:var(--border);background:var(--bg3);}
+.no-input:focus{border-color:var(--accent);background:#fff;color:var(--accent);cursor:text;}
+.no-input.has-task{color:var(--accent);font-weight:800;}
+.time-cell{text-align:center;color:var(--text2);font-size:13px;white-space:nowrap;border-right:1px solid var(--border2);}
+.slot-row.hour-start td{border-top:1px solid var(--border);}
+.slot-row:hover{background:rgba(74,108,247,.025);}
+.slot-row.drag-over{background:rgba(74,108,247,.07);outline:1.5px dashed rgba(74,108,247,.5);outline-offset:-1px;}
+.content-cell{padding:2px 3px;vertical-align:top;}
+
+/* ── Task block (schedule left) ── */
+.task-block{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:6px;padding:8px 10px;
+  font-size:18px;font-weight:600;
+  border:1.5px solid;
+  width:100%;min-height:calc(var(--sp,1) * 30px - 4px);
+  position:relative;cursor:pointer;
+  transition:filter .1s;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.task-block:hover{filter:brightness(.95);}
+.task-block.ghost{opacity:.3;}
+.tb-no{display:none;}
+.tb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;}
+.task-block.done{background:#94a3b8 !important;border-color:#64748b !important;color:#fff !important;box-shadow:none;}
+.task-block.done:hover{filter:brightness(.9);}
+
+/* Resize handles (task block) */
+.rhandle{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:36px;height:6px;background:rgba(0,0,0,.1);border-radius:3px;cursor:s-resize;transition:background .15s;}
+.rhandle::before{content:'';display:block;margin:2px auto 0;width:18px;height:2px;background:rgba(0,0,0,.2);border-radius:1px;}
+.rhandle:hover{background:rgba(74,108,247,.4);}
+.task-block.done .rhandle,.task-block.done .rhandle::before{background:rgba(255,255,255,.25);}
+.rhandle-top{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:36px;height:6px;background:rgba(0,0,0,.1);border-radius:3px;cursor:n-resize;transition:background .15s;}
+.rhandle-top::before{content:'';display:block;margin:2px auto 0;width:18px;height:2px;background:rgba(0,0,0,.2);border-radius:1px;}
+.rhandle-top:hover{background:rgba(74,108,247,.4);}
+.task-block.done .rhandle-top,.task-block.done .rhandle-top::before{background:rgba(255,255,255,.25);}
+
+.clear-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;width:100%;padding:0;opacity:0;transition:opacity .1s,color .1s;}
+.slot-row:hover .clear-btn.on{opacity:1;}
+.clear-btn.on:hover{color:var(--red);}
+.col-clear{width:26px;}
+
+/* ── Task panel (right) ── */
+.task-panel{overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-width:150px;}
+.task-ph{background:var(--bg3);padding:7px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;}
+.task-ph span{flex:1;}
+.task-hint{font-size:10px;color:var(--text2);opacity:.6;font-weight:400;text-transform:none;letter-spacing:0;}
+.add-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:5px;padding:3px 11px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 6px rgba(74,108,247,.3);}
+.add-btn:hover{opacity:.85;}
+
+.task-list{flex:1;}
+.t-item{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 10px;border-bottom:1px solid var(--border2);
+  cursor:grab;transition:background .1s;position:relative;
+}
+.t-item:hover{background:var(--bg3);}
+.t-item:active{cursor:grabbing;}
+.t-item.dragging-self{opacity:.4;}
+
+/* Reorder indicator */
+.t-item.drag-above::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px;}
+.t-item.drag-below::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px;}
+
+/* Done state */
+.t-item.done{background:#cbd5e1 !important;cursor:grab;}
+.t-item.done .t-input{color:#475569;}
+.t-item.done .t-no{opacity:.5;}
+
+/* In-schedule highlight */
+.t-item.in-schedule{background:#dde3f0;}
+.t-item.in-schedule .t-no{color:var(--accent);font-weight:800;}
+.t-item.in-schedule .t-input{color:#3a4f7a;}
+
+/* Done button */
+.t-done-btn{width:20px;height:20px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:all .15s;}
+.t-done-btn:hover{border-color:var(--green);color:var(--green);}
+.t-item.done .t-done-btn{background:var(--green);border-color:var(--green);color:#fff;}
+
+.t-no{font-size:11px;font-weight:700;color:var(--text2);width:22px;text-align:center;flex-shrink:0;}
+.t-name{flex:1;min-width:0;position:relative;}
+
+/* Input (task name) */
+.t-input{
+  width:100%;background:transparent;border:none;
+  color:var(--text);font-size:15px;font-family:inherit;
+  cursor:pointer;outline:none;padding:1px 2px;border-radius:3px;
+}
+/* Read-only: click=toggle done */
+.t-input[readonly]{cursor:pointer;}
+/* Edit mode: dblclick entered */
+.t-input:not([readonly]){
+  cursor:text;
+  background:rgba(74,108,247,.07);
+  border:1.5px solid var(--accent);
+  padding:0 3px;
+}
+.t-edit-hint{
+  position:absolute;right:2px;top:50%;transform:translateY(-50%);
+  font-size:10px;color:var(--text2);opacity:0;pointer-events:none;
+  transition:opacity .15s;white-space:nowrap;
+}
+.t-item:hover .t-edit-hint{opacity:.55;}
+
+.t-del{background:none;border:none;color:transparent;cursor:pointer;font-size:14px;transition:color .1s;flex-shrink:0;}
+.t-item:hover .t-del{color:var(--text2);}
+.t-del:hover{color:var(--red)!important;}
+
+/* ── Context menu ── */
+.ctx{position:fixed;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(74,108,247,.15);z-index:9999;min-width:190px;padding:4px 0;display:none;}
+.ci{padding:8px 14px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px;transition:background .1s;}
+.ci:hover{background:rgba(74,108,247,.06);}
+.ci.danger{color:var(--red);}
+.ci.danger:hover{background:rgba(239,68,68,.05);}
+.cdiv{border-top:1px solid var(--border);margin:4px 0;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:8px 20px;border-radius:20px;font-size:14px;z-index:9998;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(30,42,69,.25);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── Chip colors ── */
+.tc0{background:#eff6ff;border-color:#93c5fd;color:#2563eb;}
+.tc1{background:#f0fdf4;border-color:#86efac;color:#16a34a;}
+.tc2{background:#fffbeb;border-color:#fcd34d;color:#d97706;}
+.tc3{background:#fff1f2;border-color:#fca5a5;color:#dc2626;}
+.tc4{background:#faf5ff;border-color:#c4b5fd;color:#7c3aed;}
+.tc5{background:#ecfeff;border-color:#67e8f9;color:#0891b2;}
+.tc6{background:#f0fdf4;border-color:#6ee7b7;color:#059669;}
+.tc7{background:#fffde7;border-color:#fde68a;color:#b45309;}
+.tc8{background:#fff7ed;border-color:#fdba74;color:#ea580c;}
+.tc9{background:#fdf4ff;border-color:#e879f9;color:#a21caf;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="app-logo">⚡ DAILY SCHEDULE</div>
+    <span class="spacer"></span>
+    <button class="hdr-btn" onclick="goToday()">Today</button>
+    <button class="hdr-btn danger" onclick="resetDay()">↺ リセット</button>
+  </div>
+  <div class="week-nav">
+    <button class="warr" onclick="prevWeek()">‹</button>
+    <div class="dtabs" id="dtabs"></div>
+    <button class="warr" onclick="nextWeek()">›</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sch-panel" id="sch-panel">
+    <table class="sch-table" id="sch-table">
+      <colgroup>
+        <col id="col-no-el">
+        <col id="col-time-el">
+        <col>
+        <col id="col-clear-el" style="width:26px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th id="th-no" style="position:relative">No.<div class="col-rh" id="rh-no"></div></th>
+          <th id="th-time" style="position:relative">時間<div class="col-rh" id="rh-time"></div></th>
+          <th>内容</th>
+          <th class="col-clear"></th>
+        </tr>
+      </thead>
+      <tbody id="sch-body"></tbody>
+    </table>
+  </div>
+  <div class="panel-rh" id="panel-rh" title="ドラッグでパネル幅を変更"></div>
+  <div class="task-panel" id="task-panel">
+    <div class="task-ph">
+      <span>タスク一覧</span>
+      <span class="task-hint">ドラッグ:並替 / ダブルクリック:編集</span>
+      <button class="add-btn" onclick="addTask()">＋ 追加</button>
+    </div>
+    <div class="task-list" id="task-list"></div>
+  </div>
+</div>
+
+<div class="ctx" id="ctx"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const ROW_H = 30;
+const DEFAULT_TASKS = [
+  'スケジュール作成','庶務(洗濯)','#投資 高配当株',
+  '#民泊 SEO確認／物件チェック','【観光ガイド】Viator','思考時間・読書',
+  'Tour Guide案内','運動・サウナ','【サイドFIRE学園】動画編集・台本作成',
+  '','','',
+  'Trip WorksとTrip Advisorの連携','','',
+  '5月イベント（リベ企画）','','','','未来投資','','',
+  'SF学園イベント企画！','','','本執筆','Relax','',
+  'お風呂・就寝準備','移動','飲み会・夜ご飯','お昼・シャワー','－',
+];
+function buildSlots(){
+  const a=[];
+  for(let h=8;h<=23;h++){a.push(p2(h)+':00');a.push(p2(h)+':30');}
+  for(let h=0;h<=3;h++){a.push(p2(h)+':00');a.push(p2(h)+':30');}
+  return a;
+}
+function p2(n){return String(n).padStart(2,'0');}
+const SLOTS=buildSlots();
+const DASH_SI=[0,1,2,3,4,5,32,33,34,35,36,37,38,39];
+const DAY_JP=['月','火','水','木','金','土','日'];
+
+// ════ STATE ════
+let tasks=[], schedule={}, tasksDone={};
+let currentDate=todayStr(), weekOffset=0;
+let clipboard=null, taskClipboard=null;
+let dragPayload=null;      // for schedule drops
+let taskDragTi=null;       // ti currently being dragged from task list
+let resizing=null, resizingTop=null;
+let lastRender=0, lastRenderTop=0;
+let colWidths={no:38, time:54, taskPanel:300};
+
+// ════ DATE ════
+function todayStr(){const d=new Date();return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function addDays(ds,n){const d=new Date(ds);d.setDate(d.getDate()+n);return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function weekMon(ds){const d=new Date(ds);const dow=d.getDay();d.setDate(d.getDate()+(dow===0?-6:1-dow));return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function weekDates(){const mon=addDays(weekMon(todayStr()),weekOffset*7);return Array.from({length:7},(_,i)=>addDays(mon,i));}
+function fmtTab(ds){const d=new Date(ds);return`${d.getMonth()+1}/${d.getDate()}`;}
+
+// ════ PERSISTENCE ════
+function save(){
+  try{
+    localStorage.setItem('dsch5_tasks',JSON.stringify(tasks));
+    localStorage.setItem('dsch5_sch',JSON.stringify(schedule));
+    const td={};Object.keys(tasksDone).forEach(d=>{td[d]=[...tasksDone[d]];});
+    localStorage.setItem('dsch5_done',JSON.stringify(td));
+    localStorage.setItem('dsch5_cols',JSON.stringify(colWidths));
+  }catch(e){}
+}
+function load(){
+  try{
+    const t=localStorage.getItem('dsch5_tasks');
+    const s=localStorage.getItem('dsch5_sch');
+    const d=localStorage.getItem('dsch5_done');
+    const c=localStorage.getItem('dsch5_cols');
+    tasks=t?JSON.parse(t):[...DEFAULT_TASKS];
+    schedule=s?JSON.parse(s):{};
+    if(d){const raw=JSON.parse(d);Object.keys(raw).forEach(ds=>{tasksDone[ds]=new Set(raw[ds]);});}
+    if(c)colWidths={...colWidths,...JSON.parse(c)};
+  }catch(e){tasks=[...DEFAULT_TASKS];schedule={};tasksDone={};}
+}
+
+// ════ COLUMN RESIZE ════
+function applyColWidths(){
+  document.getElementById('col-no-el').style.width=colWidths.no+'px';
+  document.getElementById('col-time-el').style.width=colWidths.time+'px';
+  const tp=document.getElementById('task-panel');
+  tp.style.width=tp.style.minWidth=tp.style.maxWidth=colWidths.taskPanel+'px';
+}
+function setupColResize(){
+  setupColHandle('rh-no','no',28,120);
+  setupColHandle('rh-time','time',40,160);
+  const pr=document.getElementById('panel-rh');
+  pr.addEventListener('mousedown',e=>{
+    e.preventDefault();pr.classList.add('dragging');
+    const sx=e.clientX,sw=colWidths.taskPanel;
+    const mv=e=>{colWidths.taskPanel=Math.max(150,Math.min(600,sw+(sx-e.clientX)));applyColWidths();};
+    const up=()=>{pr.classList.remove('dragging');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);save();};
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+}
+function setupColHandle(id,key,minW,maxW){
+  const h=document.getElementById(id);if(!h)return;
+  h.addEventListener('mousedown',e=>{
+    e.preventDefault();e.stopPropagation();h.classList.add('dragging');
+    const sx=e.clientX,sw=colWidths[key];
+    const mv=e=>{colWidths[key]=Math.max(minW,Math.min(maxW,sw+(e.clientX-sx)));applyColWidths();};
+    const up=()=>{h.classList.remove('dragging');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);save();};
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+}
+
+// ════ AUTO-MERGE ════
+function autoMergeDay(ds){
+  const daySchd=schedule[ds];if(!daySchd)return;
+  const flat=new Array(SLOTS.length).fill(null);
+  for(let si=0;si<SLOTS.length;si++){
+    const e=daySchd[si];if(!e)continue;
+    const sp=e.span||1;
+    for(let k=0;k<sp;k++)if(si+k<SLOTS.length&&flat[si+k]===null)flat[si+k]={ti:e.ti,done:!!e.done};
+  }
+  const ns={};let si=0;
+  while(si<SLOTS.length){
+    const c=flat[si];if(!c){si++;continue;}
+    let sp=1;
+    while(si+sp<SLOTS.length&&flat[si+sp]&&flat[si+sp].ti===c.ti)sp++;
+    ns[si]={ti:c.ti,span:sp,done:c.done};si+=sp;
+  }
+  schedule[ds]=ns;
+}
+
+// ════ DAY INIT ════
+function initDay(ds){
+  if(schedule[ds])return;
+  const ti=tasks.indexOf('－');
+  schedule[ds]={};
+  if(ti>=0)DASH_SI.forEach(si=>{schedule[ds][si]={ti,span:1,done:false};});
+  autoMergeDay(ds);save();
+}
+function getDone(ds){if(!tasksDone[ds])tasksDone[ds]=new Set();return tasksDone[ds];}
+
+// ════ HELPERS ════
+function cc(ti){return'tc'+(ti%10);}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function occupiedSet(ds){
+  const occ=new Set();
+  SLOTS.forEach((_,si)=>{if(occ.has(si))return;const e=ds[si];if(e&&e.span>1)for(let k=1;k<e.span&&si+k<SLOTS.length;k++)occ.add(si+k);});
+  return occ;
+}
+function maxAvail(si,ds){
+  const occ=occupiedSet(ds);
+  for(let k=1;si+k<SLOTS.length;k++){const e=ds[si+k];if(e&&!occ.has(si+k))return k;}
+  return SLOTS.length-si;
+}
+
+// ════ TABS ════
+function renderTabs(){
+  const el=document.getElementById('dtabs');el.innerHTML='';
+  const today=todayStr();
+  weekDates().forEach((ds,i)=>{
+    const tab=document.createElement('div');
+    tab.className='dtab';
+    if(ds===currentDate)tab.classList.add('active');
+    if(ds===today)tab.classList.add('is-today');
+    if(ds<today&&ds!==currentDate)tab.classList.add('past');
+    if(i>=5)tab.classList.add('weekend');
+    tab.innerHTML=`<div class="dn">${DAY_JP[i]}</div><div class="dd">${fmtTab(ds)}</div>`;
+    tab.onclick=()=>{currentDate=ds;initDay(ds);renderTabs();renderSchedule();renderTasks();};
+    el.appendChild(tab);
+  });
+}
+
+// ════ RENDER SCHEDULE ════
+function renderSchedule(){
+  const tbody=document.getElementById('sch-body');tbody.innerHTML='';
+  initDay(currentDate);autoMergeDay(currentDate);
+  const daySchd=schedule[currentDate];
+  const occ=occupiedSet(daySchd);
+
+  SLOTS.forEach((time,si)=>{
+    const entry=daySchd[si];
+    const hasTask=entry!=null;
+    const span=hasTask?(entry.span||1):1;
+    const isDone=hasTask&&!!entry.done;
+    const isOcc=occ.has(si);
+
+    const tr=document.createElement('tr');
+    tr.className='slot-row'+(isOcc?' occ':'');
+    if(time.endsWith(':00'))tr.classList.add('hour-start');
+    tr.dataset.si=si;
+
+    // No. cell (editable number input)
+    const tdNo=document.createElement('td');tdNo.className='col-no no-cell';
+    if(!isOcc){
+      const noInp=document.createElement('input');
+      noInp.type='number';
+      noInp.className='no-input'+(hasTask?' has-task':'');
+      noInp.min='1';noInp.max=tasks.length;
+      noInp.value=hasTask?(entry.ti+1):'';
+      noInp.title='タスク番号を入力してEnter';
+      noInp.addEventListener('mousedown',e=>e.stopPropagation());
+      noInp.addEventListener('keydown',e=>{if(e.key==='Enter')noInp.blur();e.stopPropagation();});
+      noInp.addEventListener('blur',()=>{
+        const val=parseInt(noInp.value,10);
+        if(!isNaN(val)&&val>=1&&val<=tasks.length){
+          const ti=val-1;
+          const dSchd=schedule[currentDate]||{};
+          dSchd[si]={ti,span:1,done:false};
+          schedule[currentDate]=dSchd;autoMergeDay(currentDate);save();renderSchedule();renderTasks();
+        } else if(noInp.value===''){
+          if(hasTask){delete schedule[currentDate][si];autoMergeDay(currentDate);save();renderSchedule();renderTasks();}
+        }
+      });
+      tdNo.appendChild(noInp);
+    }
+
+    const tdTime=document.createElement('td');tdTime.className='col-time time-cell';tdTime.textContent=time;
+    tr.appendChild(tdNo);tr.appendChild(tdTime);
+
+    if(!isOcc){
+      const tdC=document.createElement('td');tdC.className='content-cell';
+      if(span>1)tdC.rowSpan=span;
+
+      if(hasTask){
+        const block=document.createElement('div');
+        block.className=`task-block ${cc(entry.ti)}${isDone?' done':''}`;
+        block.style.setProperty('--sp',span);
+        block.title=isDone?'クリックして完了を取り消す':'クリックして完了にする';
+        block.innerHTML=`<span class="tb-no">${entry.ti+1}</span><span class="tb-name">${escH(tasks[entry.ti]||'')}</span>`;
+        block.addEventListener('click',e=>{
+          if(e.target.closest('.rhandle')||e.target.closest('.rhandle-top'))return;
+          entry.done=!entry.done;save();renderSchedule();renderTasks();
+        });
+
+        // Top resize
+        const rht=document.createElement('div');rht.className='rhandle-top';rht.title='上をドラッグ → 開始時刻を変更';
+        rht.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();if(!resizing)startResizeTop(e,si,span,entry.ti,!!entry.done);});
+        block.appendChild(rht);
+
+        // Bottom resize
+        const rh=document.createElement('div');rh.className='rhandle';rh.title='下をドラッグ → 終了時刻を変更';
+        rh.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();if(!resizingTop)startResize(e,si,span);});
+        block.appendChild(rh);
+
+        // Drag from schedule block → copy
+        block.draggable=true;
+        block.addEventListener('dragstart',e=>{
+          dragPayload={ti:entry.ti,span:entry.span||1,fromSi:si,fromDate:currentDate};
+          e.dataTransfer.effectAllowed='copy';
+          e.dataTransfer.setData('text/plain',JSON.stringify(dragPayload));
+          setTimeout(()=>block.classList.add('ghost'),0);
+        });
+        block.addEventListener('dragend',()=>{block.classList.remove('ghost');dragPayload=null;});
+        block.tabIndex=0;
+        block.addEventListener('keydown',e=>{if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();clearSlot(si);}});
+        tdC.appendChild(block);
+      }
+
+      addDropZone(tdC,tr,si);
+      tdC.addEventListener('contextmenu',e=>{e.preventDefault();showCtx(e,si,hasTask,entry);});
+
+      const tdX=document.createElement('td');tdX.className='col-clear';
+      if(span>1)tdX.rowSpan=span;
+      const xb=document.createElement('button');xb.className='clear-btn'+(hasTask?' on':'');xb.textContent='✕';xb.title='クリア';
+      xb.onclick=e=>{e.stopPropagation();clearSlot(si);};
+      tdX.appendChild(xb);
+      tr.appendChild(tdC);tr.appendChild(tdX);
+    }
+    if(!isOcc&&!hasTask)addDropZone(tr,tr,si);
+    tbody.appendChild(tr);
+  });
+}
+
+function addDropZone(el,tr,si){
+  el.addEventListener('dragover',e=>{
+    // Accept drops from task list items OR schedule blocks
+    if(!dragPayload&&taskDragTi===null)return;
+    if(dragPayload&&dragPayload.fromSi===si&&dragPayload.fromDate===currentDate)return;
+    e.preventDefault();tr.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave',()=>tr.classList.remove('drag-over'));
+  el.addEventListener('drop',e=>{
+    e.preventDefault();tr.classList.remove('drag-over');
+    // Task list drag → place in schedule
+    if(taskDragTi!==null){
+      const ti=taskDragTi;
+      const daySchd=schedule[currentDate]||{};
+      const avail=maxAvail(si,daySchd);
+      daySchd[si]={ti,span:Math.min(1,avail),done:false};
+      schedule[currentDate]=daySchd;
+      autoMergeDay(currentDate);save();renderSchedule();renderTasks();
+      return;
+    }
+    handleDrop(e,si);
+  });
+}
+function handleDrop(e,si){
+  let p=dragPayload;
+  if(!p){try{p=JSON.parse(e.dataTransfer.getData('text/plain'));}catch(_){return;}}
+  if(!p||p.ti===undefined)return;
+  const {ti,span}=p;
+  const daySchd=schedule[currentDate]||{};
+  const avail=maxAvail(si,daySchd);
+  const useSpan=Math.min(span,avail);
+  for(let k=1;k<useSpan;k++)delete daySchd[si+k];
+  daySchd[si]={ti,span:useSpan,done:false};
+  schedule[currentDate]=daySchd;
+  autoMergeDay(currentDate);save();renderSchedule();renderTasks();
+}
+
+// ════ BOTTOM RESIZE ════
+function startResize(e,si,curSpan){
+  resizing={si,date:currentDate,startY:e.clientY,origSpan:curSpan,curSpan};
+  document.addEventListener('mousemove',onResizeMove);
+  document.addEventListener('mouseup',onResizeUp);
+  document.body.style.cursor='s-resize';document.body.style.userSelect='none';
+}
+function onResizeMove(e){
+  if(!resizing)return;
+  const now=Date.now();
+  const delta=Math.round((e.clientY-resizing.startY)/ROW_H);
+  const daySchd=schedule[resizing.date]||{};
+  let maxSp=SLOTS.length-resizing.si;
+  for(let k=1;resizing.si+k<SLOTS.length;k++){const ex=daySchd[resizing.si+k];if(ex&&k>=resizing.origSpan){maxSp=k;break;}}
+  const newSpan=Math.max(1,Math.min(maxSp,resizing.origSpan+delta));
+  if(newSpan!==resizing.curSpan){
+    resizing.curSpan=newSpan;
+    for(let k=1;k<newSpan;k++)delete daySchd[resizing.si+k];
+    daySchd[resizing.si]={...daySchd[resizing.si],span:newSpan};
+    if(now-lastRender>25){lastRender=now;renderSchedule();}
+  }
+}
+function onResizeUp(){
+  if(!resizing)return;
+  autoMergeDay(resizing.date);save();renderSchedule();renderTasks();
+  document.removeEventListener('mousemove',onResizeMove);document.removeEventListener('mouseup',onResizeUp);
+  document.body.style.cursor='';document.body.style.userSelect='';resizing=null;
+}
+
+// ════ TOP RESIZE ════
+function startResizeTop(e,si,span,ti,done){
+  const endSi=si+span-1;
+  resizingTop={origSi:si,date:currentDate,startY:e.clientY,endSi,curSi:si,ti,done};
+  document.addEventListener('mousemove',onResizeMoveTop);
+  document.addEventListener('mouseup',onResizeUpTop);
+  document.body.style.cursor='n-resize';document.body.style.userSelect='none';
+}
+function onResizeMoveTop(e){
+  if(!resizingTop)return;
+  const now=Date.now();
+  const delta=Math.round((resizingTop.startY-e.clientY)/ROW_H);
+  const daySchd=schedule[resizingTop.date]||{};
+  delete daySchd[resizingTop.curSi];
+  let minSi=0;
+  for(let k=resizingTop.origSi-1;k>=0;k--){const ex=daySchd[k];if(ex){minSi=k+(ex.span||1);break;}}
+  const newSi=Math.max(minSi,Math.min(resizingTop.endSi,resizingTop.origSi-delta));
+  daySchd[newSi]={ti:resizingTop.ti,span:resizingTop.endSi-newSi+1,done:resizingTop.done};
+  resizingTop.curSi=newSi;
+  if(now-lastRenderTop>25){lastRenderTop=now;renderSchedule();}
+}
+function onResizeUpTop(){
+  if(!resizingTop)return;
+  autoMergeDay(resizingTop.date);save();renderSchedule();renderTasks();
+  document.removeEventListener('mousemove',onResizeMoveTop);document.removeEventListener('mouseup',onResizeUpTop);
+  document.body.style.cursor='';document.body.style.userSelect='';resizingTop=null;
+}
+
+// ════ RENDER TASKS ════
+function renderTasks(){
+  const list=document.getElementById('task-list');list.innerHTML='';
+  const done=getDone(currentDate);
+
+  // Which tasks appear in today's schedule?
+  const usedInSchedule=new Set();
+  Object.values(schedule[currentDate]||{}).forEach(e=>{if(e)usedInSchedule.add(e.ti);});
+
+  tasks.forEach((name,ti)=>{
+    const isDone=done.has(ti);
+    const isUsed=usedInSchedule.has(ti);
+
+    const item=document.createElement('div');
+    item.className='t-item'+(isDone?' done':'')+(isUsed?' in-schedule':'');
+    item.dataset.ti=ti;
+    item.title='ドラッグ: 並替 or スケジュールへ配置 / ダブルクリック: 名称編集';
+
+    // ── Drag: task list item → reorder OR copy to schedule ──
+    item.draggable=true;
+    item.addEventListener('dragstart',e=>{
+      taskDragTi=ti;
+      dragPayload={ti,span:1,fromSi:null,fromDate:null};
+      e.dataTransfer.effectAllowed='copyMove';
+      e.dataTransfer.setData('text/plain',JSON.stringify({type:'task',ti}));
+      setTimeout(()=>item.classList.add('dragging-self'),0);
+    });
+    item.addEventListener('dragend',()=>{
+      item.classList.remove('dragging-self');
+      taskDragTi=null;dragPayload=null;
+      document.querySelectorAll('.t-item').forEach(el=>el.classList.remove('drag-above','drag-below'));
+    });
+
+    // Drag over another task item → show reorder indicator
+    item.addEventListener('dragover',e=>{
+      if(taskDragTi===null||taskDragTi===ti)return;
+      e.preventDefault();e.stopPropagation();
+      const rect=item.getBoundingClientRect();const mid=rect.top+rect.height/2;
+      document.querySelectorAll('.t-item').forEach(el=>el.classList.remove('drag-above','drag-below'));
+      item.classList.add(e.clientY<mid?'drag-above':'drag-below');
+    });
+    item.addEventListener('dragleave',e=>{
+      if(!item.contains(e.relatedTarget))item.classList.remove('drag-above','drag-below');
+    });
+    // Drop on another task item → reorder
+    item.addEventListener('drop',e=>{
+      if(taskDragTi===null||taskDragTi===ti)return;
+      e.preventDefault();e.stopPropagation();
+      const rect=item.getBoundingClientRect();
+      reorderTask(taskDragTi,ti,e.clientY>=rect.top+rect.height/2);
+      item.classList.remove('drag-above','drag-below');
+    });
+
+    // Done toggle button
+    const doneBtn=document.createElement('button');
+    doneBtn.className='t-done-btn';doneBtn.title=isDone?'完了を取り消す':'完了にする';doneBtn.textContent='✓';
+    doneBtn.addEventListener('mousedown',e=>e.stopPropagation());
+    doneBtn.onclick=e=>{
+      e.stopPropagation();
+      if(done.has(ti))done.delete(ti);else done.add(ti);
+      save();renderTasks();
+    };
+
+    const noEl=document.createElement('span');noEl.className='t-no';noEl.textContent=ti+1;
+
+    // Task name area
+    const nameDiv=document.createElement('div');nameDiv.className='t-name';
+    const inp=document.createElement('input');
+    inp.type='text';inp.className='t-input';inp.value=name;
+    inp.readOnly=true;
+
+    // Single click (readOnly) → toggle done
+    inp.addEventListener('click',e=>{
+      if(inp.readOnly){
+        e.preventDefault();
+        if(done.has(ti))done.delete(ti);else done.add(ti);
+        save();renderTasks();
+      }
+    });
+    // ── Double click → enter edit mode ──
+    inp.addEventListener('dblclick',e=>{
+      e.stopPropagation();
+      inp.readOnly=false;
+      inp.focus();
+      inp.select();
+    });
+    inp.addEventListener('mousedown',e=>{
+      if(!inp.readOnly)e.stopPropagation();
+    });
+    inp.addEventListener('blur',()=>{
+      inp.readOnly=true;
+      if(tasks[ti]!==inp.value){tasks[ti]=inp.value;save();renderSchedule();}
+    });
+    inp.addEventListener('keydown',e=>{
+      if(!inp.readOnly){
+        if(e.key==='Enter')inp.blur();
+        if(e.key==='Escape'){inp.value=tasks[ti];inp.blur();}
+        e.stopPropagation();
+      } else {
+        if(e.key==='Delete'){e.preventDefault();deleteTask(ti);}
+      }
+    });
+
+    // Hover hint "ダブルクリックで編集"
+    const hint=document.createElement('span');hint.className='t-edit-hint';hint.textContent='ダブルクリックで編集';
+    nameDiv.appendChild(inp);nameDiv.appendChild(hint);
+
+    const del=document.createElement('button');del.className='t-del';del.textContent='×';del.title='削除';
+    del.addEventListener('mousedown',e=>e.stopPropagation());
+    del.onclick=e=>{e.stopPropagation();deleteTask(ti);};
+
+    item.appendChild(doneBtn);item.appendChild(noEl);item.appendChild(nameDiv);item.appendChild(del);
+    item.addEventListener('contextmenu',e=>{e.preventDefault();showTaskCtx(e,ti,name);});
+    list.appendChild(item);
+  });
+}
+
+// ════ REORDER TASKS ════
+// 並び替え → スケジュール内の参照インデックスも自動更新
+function reorderTask(fromTi,toTi,insertAfter){
+  const newOrder=tasks.map((_,i)=>i);
+  newOrder.splice(fromTi,1);
+  let idx=toTi;if(fromTi<toTi)idx--;if(insertAfter)idx++;
+  idx=Math.max(0,Math.min(newOrder.length,idx));
+  newOrder.splice(idx,0,fromTi);
+  // revMap[oldTi] = newTi
+  const revMap={};newOrder.forEach((oldTi,newTi)=>{revMap[oldTi]=newTi;});
+  // スケジュール内のタスク番号を更新
+  Object.keys(schedule).forEach(date=>{
+    Object.keys(schedule[date]).forEach(si=>{
+      const e=schedule[date][si];
+      if(e&&revMap[e.ti]!==undefined)e.ti=revMap[e.ti];
+    });
+  });
+  // 完了状態のインデックスも更新
+  Object.keys(tasksDone).forEach(date=>{
+    tasksDone[date]=new Set([...tasksDone[date]].map(t=>revMap[t]!==undefined?revMap[t]:t));
+  });
+  tasks=newOrder.map(i=>tasks[i]);
+  save();renderTasks();renderSchedule();
+  toast('タスク順序を更新しました');
+}
+
+// ════ ACTIONS ════
+function clearSlot(si){delete schedule[currentDate][si];autoMergeDay(currentDate);save();renderSchedule();renderTasks();}
+function resetDay(){
+  if(!confirm('今日のスケジュールをリセットしますか？'))return;
+  delete schedule[currentDate];delete tasksDone[currentDate];
+  initDay(currentDate);renderSchedule();renderTasks();toast('リセットしました');
+}
+function addTask(){
+  tasks.push('');save();renderTasks();
+  const inputs=document.querySelectorAll('.t-input');
+  if(inputs.length){const last=inputs[inputs.length-1];last.readOnly=false;last.focus();last.select();last.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+function deleteTask(ti){
+  const newSch={};
+  Object.keys(schedule).forEach(date=>{
+    newSch[date]={};
+    Object.keys(schedule[date]).forEach(si=>{const e=schedule[date][si];if(e.ti===ti)return;newSch[date][si]={...e,ti:e.ti>ti?e.ti-1:e.ti};});
+  });
+  const newTd={};
+  Object.keys(tasksDone).forEach(date=>{newTd[date]=new Set([...tasksDone[date]].map(t=>t>ti?t-1:t).filter(t=>t!==ti));});
+  schedule=newSch;tasksDone=newTd;tasks.splice(ti,1);
+  save();renderTasks();renderSchedule();
+}
+function goToday(){
+  const t=todayStr();
+  if(currentDate!==t||weekOffset!==0){currentDate=t;weekOffset=0;initDay(t);renderTabs();renderSchedule();renderTasks();}
+}
+function prevWeek(){weekOffset--;renderTabs();}
+function nextWeek(){weekOffset++;renderTabs();}
+
+// ════ CONTEXT MENU (schedule) ════
+function showCtx(e,si,hasTask,entry){
+  const menu=document.getElementById('ctx');menu.innerHTML='';const items=[];
+  if(hasTask){
+    const isDone=!!entry.done;
+    items.push({icon:isDone?'○':'✓',text:isDone?'完了を取り消す':'完了にする',action:()=>{entry.done=!entry.done;save();renderSchedule();renderTasks();}});
+    items.push({icon:'📋',text:'コピー',action:()=>{clipboard={ti:entry.ti,span:entry.span||1};toast(`「${tasks[entry.ti]||''}」をコピーしました`);}});
+  }
+  if(clipboard!==null&&clipboard.ti<tasks.length){
+    const n=tasks[clipboard.ti]||`No.${clipboard.ti+1}`;
+    if(items.length)items.push(null);
+    items.push({icon:'📌',text:`「${n}」を貼り付け`,action:()=>{
+      const ds=schedule[currentDate]||{};const avail=maxAvail(si,ds);const sp=Math.min(clipboard.span,avail);
+      for(let k=1;k<sp;k++)delete ds[si+k];
+      ds[si]={ti:clipboard.ti,span:sp,done:false};
+      schedule[currentDate]=ds;autoMergeDay(currentDate);save();renderSchedule();renderTasks();
+    }});
+  }
+  if(hasTask){if(items.length)items.push(null);items.push({icon:'✕',text:'クリア',danger:true,action:()=>clearSlot(si)});}
+  if(!items.length)return;
+  _buildMenu(menu,items);
+  const x=Math.min(e.clientX,innerWidth-200);const y=Math.min(e.clientY,innerHeight-160);
+  menu.style.left=x+'px';menu.style.top=y+'px';menu.style.display='block';
+}
+
+// ════ CONTEXT MENU (task) ════
+function showTaskCtx(e,ti,name){
+  const menu=document.getElementById('ctx');menu.innerHTML='';const items=[];
+  items.push({icon:'✏️',text:'編集 (ダブルクリック)',action:()=>{
+    // find input and enter edit mode
+    const inp=document.querySelectorAll('.t-item')[ti]?.querySelector('.t-input');
+    if(inp){inp.readOnly=false;inp.focus();inp.select();}
+  }});
+  items.push({icon:'📋',text:'タスクをコピー',action:()=>{taskClipboard=name;toast(`「${name||'空タスク'}」をコピーしました`);}});
+  if(taskClipboard!==null){
+    items.push({icon:'📌',text:`「${taskClipboard||'空タスク'}」を貼り付け`,action:()=>{
+      tasks.splice(ti+1,0,taskClipboard);
+      Object.keys(schedule).forEach(date=>{Object.keys(schedule[date]).forEach(si=>{const en=schedule[date][si];if(en&&en.ti>ti)en.ti++;});});
+      Object.keys(tasksDone).forEach(date=>{tasksDone[date]=new Set([...tasksDone[date]].map(t=>t>ti?t+1:t));});
+      save();renderTasks();renderSchedule();
+    }});
+  }
+  const done=getDone(currentDate);const isDone=done.has(ti);
+  items.push(null);
+  items.push({icon:isDone?'○':'✓',text:isDone?'完了を取り消す':'完了にする',action:()=>{if(done.has(ti))done.delete(ti);else done.add(ti);save();renderTasks();}});
+  items.push({icon:'✕',text:'削除',danger:true,action:()=>deleteTask(ti)});
+  _buildMenu(menu,items);
+  const x=Math.min(e.clientX,innerWidth-200);const y=Math.min(e.clientY,innerHeight-160);
+  menu.style.left=x+'px';menu.style.top=y+'px';menu.style.display='block';
+}
+
+function _buildMenu(menu,items){
+  items.forEach(item=>{
+    if(!item){const d=document.createElement('div');d.className='cdiv';menu.appendChild(d);return;}
+    const div=document.createElement('div');div.className='ci'+(item.danger?' danger':'');
+    div.innerHTML=`${item.icon} ${escH(item.text)}`;
+    div.onclick=()=>{item.action();hideCtx();};menu.appendChild(div);
+  });
+}
+function hideCtx(){document.getElementById('ctx').style.display='none';}
+document.addEventListener('click',hideCtx);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideCtx();});
+
+// ════ TOAST ════
+let toastT=null;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2200);
+}
+
+// ════ INIT ════
+load();
+initDay(currentDate);
+applyColWidths();
+setupColResize();
+renderTabs();
+renderSchedule();
+renderTasks();
+setInterval(()=>renderTabs(),60000);
+</script>
+</body>
+</html>
