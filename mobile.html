@@ -490,7 +490,21 @@ function attachResizePointer(handle,si,curSpan){
 function onResizeMoveDoc(e){
   if(!resizing||e.pointerId!==resizing.pointerId)return;
   e.preventDefault();
+  autoScrollDuringResize(e.clientY);
   onResizeMove(e);
+}
+
+// While dragging a resize handle near the top/bottom edge of the visible
+// schedule, auto-scroll the panel so the finger never runs out of screen
+// space before reaching the desired time (this mainly affects the top
+// handle: moving the start time earlier means dragging upward, and blocks
+// near the top of the viewport have little room to drag into otherwise).
+function autoScrollDuringResize(clientY){
+  const panel=document.getElementById('panel-schedule');
+  const rect=panel.getBoundingClientRect();
+  const EDGE=70;
+  if(clientY<rect.top+EDGE)panel.scrollBy(0,-16);
+  else if(clientY>rect.bottom-EDGE)panel.scrollBy(0,16);
 }
 function onResizeUpDoc(e){
   if(!resizing||e.pointerId!==resizing.pointerId)return;
@@ -537,6 +551,7 @@ function attachResizeTopPointer(handle,si,span,ti,done){
 function onResizeMoveTopDoc(e){
   if(!resizingTop||e.pointerId!==resizingTop.pointerId)return;
   e.preventDefault();
+  autoScrollDuringResize(e.clientY);
   onResizeMoveTop(e);
 }
 function onResizeUpTopDoc(e){
