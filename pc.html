@@ -195,6 +195,36 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .tc7{background:#fffde7;border-color:#fde68a;color:#b45309;}
 .tc8{background:#fff7ed;border-color:#fdba74;color:#ea580c;}
 .tc9{background:#fdf4ff;border-color:#e879f9;color:#a21caf;}
+
+/* ── Sync modal ── */
+.sync-overlay{position:fixed;inset:0;background:rgba(20,25,40,.4);z-index:9990;display:none;}
+.sync-overlay.on{display:block;}
+.sync-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:14px;
+  width:380px;max-width:90vw;max-height:80vh;overflow-y:auto;z-index:9991;display:none;
+  box-shadow:0 12px 40px rgba(30,42,69,.25);}
+.sync-modal.on{display:block;}
+.sync-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;}
+.sync-close{background:none;border:none;font-size:16px;color:var(--text2);cursor:pointer;}
+.sync-close:hover{color:var(--text);}
+.sync-body{padding:16px 18px 20px;}
+.sync-status{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;}
+.sync-status b{color:var(--text);}
+.sync-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.sync-btn{border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;}
+.sync-btn.pull{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+.sync-btn.push{background:var(--green);}
+.sync-btn:hover{opacity:.88;}
+.sync-btn:disabled{opacity:.5;cursor:default;}
+.sync-input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:9px;font-size:13px;font-family:inherit;outline:none;}
+.sync-input:focus{border-color:var(--accent);}
+.sync-label{font-size:12px;color:var(--text2);margin:4px 0 2px;}
+.sync-forget{background:none;border:none;color:var(--text2);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px 0;align-self:flex-start;}
+.sync-msg{font-size:13px;padding:9px 11px;border-radius:6px;margin-top:10px;display:none;}
+.sync-msg.on{display:block;}
+.sync-msg.ok{background:#f0fdf4;color:#16a34a;}
+.sync-msg.err{background:#fff1f2;color:#dc2626;}
+.sync-hint{font-size:12px;color:var(--text2);line-height:1.7;margin-top:6px;}
+.sync-hint ol{padding-left:18px;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -203,6 +233,7 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
   <div class="hdr-top">
     <div class="app-logo">⚡ DAILY SCHEDULE</div>
     <span class="spacer"></span>
+    <button class="hdr-btn" onclick="openSyncModal()">🔄 同期</button>
     <button class="hdr-btn" onclick="goToday()">Today</button>
     <button class="hdr-btn danger" onclick="resetDay()">↺ リセット</button>
   </div>
@@ -246,6 +277,12 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 
 <div class="ctx" id="ctx"></div>
 <div class="toast" id="toast"></div>
+
+<div class="sync-overlay" id="sync-overlay" onclick="closeSyncModal()"></div>
+<div class="sync-modal" id="sync-modal">
+  <div class="sync-modal-hdr"><span>🔄 同期</span><button class="sync-close" onclick="closeSyncModal()">✕</button></div>
+  <div class="sync-body" id="sync-body"></div>
+</div>
 
 <script>
 const ROW_H = 30;
@@ -836,6 +873,164 @@ let toastT=null;
 function toast(msg){
   const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2200);
+}
+
+// ════ SYNC (GitHub-backed, manual push/pull) ════
+// タスクの内容(一覧・並び順・完了状態・スケジュール配置)をPC/iPhone間で
+// 共有するため、リポジトリ内の data/state.json を単一の共有ストアとして使う。
+// 読み取りは raw.githubusercontent.com（認証不要・即時反映）、
+// 書き込みはGitHub Contents API（この端末に保存したPATで認証）。
+const GH_OWNER='taka92aki', GH_REPO='daily-schedule-app', GH_PATH='data/state.json';
+const GH_RAW_URL=`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_PATH}`;
+const GH_API_URL=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+
+function getPat(){return localStorage.getItem('gh_pat')||'';}
+function setPat(v){if(v)localStorage.setItem('gh_pat',v);else localStorage.removeItem('gh_pat');}
+function getLastSynced(){return parseInt(localStorage.getItem('sync_last_at')||'0',10);}
+function setLastSynced(t){localStorage.setItem('sync_last_at',String(t));}
+function b64EncodeUtf8(str){return btoa(unescape(encodeURIComponent(str)));}
+
+function buildSyncPayload(){
+  const td={};Object.keys(tasksDone).forEach(d=>{td[d]=[...tasksDone[d]];});
+  return{tasks,schedule,tasksDone:td,updatedAt:Date.now()};
+}
+function applySyncPayload(remote){
+  tasks=remote.tasks||[];
+  schedule=remote.schedule||{};
+  tasksDone={};
+  Object.keys(remote.tasksDone||{}).forEach(d=>{tasksDone[d]=new Set(remote.tasksDone[d]);});
+  save();
+  initDay(currentDate);
+  renderTabs();renderSchedule();renderTasks();
+  setLastSynced(remote.updatedAt||Date.now());
+}
+async function fetchRemote(){
+  const res=await fetch(GH_RAW_URL+'?t='+Date.now());
+  if(res.status===404)return null;
+  if(!res.ok)throw new Error('取得に失敗しました ('+res.status+')');
+  return res.json();
+}
+async function pullFromGithub(){
+  const remote=await fetchRemote();
+  if(!remote)throw new Error('まだGitHub上にデータがありません。先に「アップロード」してください。');
+  applySyncPayload(remote);
+  return remote;
+}
+async function pushToGithub(){
+  const pat=getPat();
+  if(!pat)throw new Error('トークンが設定されていません');
+  let sha;
+  const getRes=await fetch(GH_API_URL,{headers:{Authorization:'token '+pat,Accept:'application/vnd.github+json'}});
+  if(getRes.status===200){sha=(await getRes.json()).sha;}
+  else if(getRes.status!==404){throw new Error('確認に失敗しました ('+getRes.status+')');}
+  const payload=buildSyncPayload();
+  const body={message:'sync task data from pc',content:b64EncodeUtf8(JSON.stringify(payload,null,2))};
+  if(sha)body.sha=sha;
+  const putRes=await fetch(GH_API_URL,{method:'PUT',headers:{Authorization:'token '+pat,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!putRes.ok){
+    let msg='アップロードに失敗しました ('+putRes.status+')';
+    if(putRes.status===401)msg='トークンが無効です。設定し直してください。';
+    throw new Error(msg);
+  }
+  setLastSynced(payload.updatedAt);
+  return payload;
+}
+function fmtSyncTime(t){
+  if(!t)return'未同期';
+  const d=new Date(t);
+  return`${d.getMonth()+1}/${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+function openSyncModal(){
+  const pat=getPat();
+  const body=document.getElementById('sync-body');
+  body.innerHTML=`
+    <div class="sync-status">最終同期: <b id="sync-last">${fmtSyncTime(getLastSynced())}</b><br>この端末での操作をPC/iPhone間で共有します。</div>
+    <div class="sync-row">
+      <button class="sync-btn pull" id="sync-pull-btn">⬇️ GitHubから取り込む</button>
+      <button class="sync-btn push" id="sync-push-btn" ${pat?'':'disabled'}>⬆️ この端末の内容をアップロード</button>
+    </div>
+    <div id="sync-token-area"></div>
+    <div class="sync-msg" id="sync-msg"></div>`;
+  renderSyncTokenArea();
+  document.getElementById('sync-pull-btn').onclick=onSyncPullClick;
+  document.getElementById('sync-push-btn').onclick=onSyncPushClick;
+  document.getElementById('sync-overlay').classList.add('on');
+  document.getElementById('sync-modal').classList.add('on');
+}
+function closeSyncModal(){
+  document.getElementById('sync-overlay').classList.remove('on');
+  document.getElementById('sync-modal').classList.remove('on');
+}
+function renderSyncTokenArea(){
+  const pat=getPat();
+  const area=document.getElementById('sync-token-area');
+  if(pat){
+    area.innerHTML=`<button class="sync-forget" id="sync-forget-btn">この端末のトークンを削除</button>`;
+    document.getElementById('sync-forget-btn').onclick=()=>{
+      setPat('');renderSyncTokenArea();
+      document.getElementById('sync-push-btn').disabled=true;
+      showSyncMsg('トークンを削除しました','ok');
+    };
+  }else{
+    area.innerHTML=`
+      <div class="sync-label">GitHubトークン（アップロードに必要・この端末にのみ保存）</div>
+      <input type="password" class="sync-input" id="sync-pat-input" placeholder="github_pat_xxxxxxxx" autocomplete="off" spellcheck="false">
+      <div class="sync-hint">
+        GitHub → Settings → Developer settings → Fine-grained tokens で発行し、
+        リポジトリを <b>${GH_OWNER}/${GH_REPO}</b> のみに限定、
+        Permissions の <b>Contents: Read and write</b> を付与してください。
+        <ol><li>生成したトークンをここに貼り付け</li><li>「保存」をクリック</li></ol>
+      </div>
+      <div class="sync-row" style="margin-top:8px;">
+        <button class="sync-btn push" id="sync-pat-save">保存</button>
+      </div>`;
+    document.getElementById('sync-pat-save').onclick=()=>{
+      const v=document.getElementById('sync-pat-input').value.trim();
+      if(!v){showSyncMsg('トークンを入力してください','err');return;}
+      setPat(v);renderSyncTokenArea();
+      document.getElementById('sync-push-btn').disabled=false;
+      showSyncMsg('トークンを保存しました','ok');
+    };
+  }
+}
+function showSyncMsg(msg,kind){
+  const el=document.getElementById('sync-msg');
+  if(!el)return;
+  el.textContent=msg;el.className='sync-msg on '+kind;
+}
+async function onSyncPullClick(){
+  const btn=document.getElementById('sync-pull-btn');
+  btn.disabled=true;btn.textContent='取り込み中…';
+  try{
+    await pullFromGithub();
+    document.getElementById('sync-last').textContent=fmtSyncTime(getLastSynced());
+    showSyncMsg('GitHubの内容を取り込みました','ok');
+    toast('同期しました');
+  }catch(err){
+    showSyncMsg(err.message,'err');
+  }finally{
+    btn.disabled=false;btn.textContent='⬇️ GitHubから取り込む';
+  }
+}
+async function onSyncPushClick(){
+  const btn=document.getElementById('sync-push-btn');
+  btn.disabled=true;btn.textContent='アップロード中…';
+  try{
+    const remote=await fetchRemote();
+    if(remote&&remote.updatedAt>getLastSynced()){
+      if(!confirm('GitHub上のデータがこの端末より新しいようです。上書きしてアップロードしますか？')){
+        btn.disabled=false;btn.textContent='⬆️ この端末の内容をアップロード';return;
+      }
+    }
+    await pushToGithub();
+    document.getElementById('sync-last').textContent=fmtSyncTime(getLastSynced());
+    showSyncMsg('GitHubにアップロードしました','ok');
+    toast('同期しました');
+  }catch(err){
+    showSyncMsg(err.message,'err');
+  }finally{
+    btn.disabled=false;btn.textContent='⬆️ この端末の内容をアップロード';
+  }
 }
 
 // ════ INIT ════
