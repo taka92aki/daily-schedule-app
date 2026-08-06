@@ -881,7 +881,6 @@ function toast(msg){
 // 読み取りは raw.githubusercontent.com（認証不要・即時反映）、
 // 書き込みはGitHub Contents API（この端末に保存したPATで認証）。
 const GH_OWNER='taka92aki', GH_REPO='daily-schedule-app', GH_PATH='data/state.json';
-const GH_RAW_URL=`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/${GH_PATH}`;
 const GH_API_URL=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
 
 function getPat(){return localStorage.getItem('gh_pat')||'';}
@@ -905,7 +904,15 @@ function applySyncPayload(remote){
   setLastSynced(remote.updatedAt||Date.now());
 }
 async function fetchRemote(){
-  const res=await fetch(GH_RAW_URL+'?t='+Date.now());
+  // raw.githubusercontent.com sits behind a CDN that can cache the "main"
+  // branch pointer per-edge-node for several minutes, ignoring cache-busting
+  // query params entirely (it isn't designed for frequently-changing refs).
+  // api.github.com reflects the current commit immediately, so use that for
+  // reads instead — this is what actually makes "download" trustworthy.
+  const headers={Accept:'application/vnd.github.raw'};
+  const pat=getPat();
+  if(pat)headers.Authorization='token '+pat;
+  const res=await fetch(GH_API_URL,{headers,cache:'no-store'});
   if(res.status===404)return null;
   if(!res.ok)throw new Error('取得に失敗しました ('+res.status+')');
   return res.json();
