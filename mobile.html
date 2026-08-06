@@ -33,9 +33,12 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .hdr-top{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;}
 .app-logo{font-size:16px;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .spacer{flex:1;}
-.hdr-btn{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text2);}
+.hdr-btn{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text2);position:relative;}
 .hdr-btn:active{background:var(--bg3);}
 .hdr-btn.danger{color:var(--red);border-color:#fbd5d5;}
+.hdr-btn.sync-ok::after,.hdr-btn.sync-err::after{content:'';position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;border:1.5px solid #fff;}
+.hdr-btn.sync-ok::after{background:var(--green);}
+.hdr-btn.sync-err::after{background:var(--red);}
 .week-nav{display:flex;align-items:center;gap:0;padding:0 4px;}
 .warr{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;padding:6px 8px;border-radius:8px;flex-shrink:0;}
 .warr:active{color:var(--accent);background:var(--bg3);}
@@ -267,6 +270,7 @@ function save(){
     const td={};Object.keys(tasksDone).forEach(d=>{td[d]=[...tasksDone[d]];});
     localStorage.setItem('dsch6_done',JSON.stringify(td));
   }catch(e){}
+  scheduleAutoPush();
 }
 function load(){
   try{
@@ -762,11 +766,11 @@ function toast(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2200);
 }
 
-// ════ SYNC (GitHub-backed, manual push/pull) ════
+// ════ SYNC (GitHub-backed, automatic push/pull) ════
 // タスクの内容(一覧・並び順・完了状態・スケジュール配置)をPC/iPhone間で
 // 共有するため、リポジトリ内の data/state.json を単一の共有ストアとして使う。
-// 読み取りは raw.githubusercontent.com（認証不要・即時反映）、
-// 書き込みはGitHub Contents API（この端末に保存したPATで認証）。
+// 読み書きどちらもGitHub Contents API（この端末に保存したPATで認証）。
+// 編集のたびに自動アップロード、起動時・復帰時・一定間隔で自動ダウンロードする。
 const GH_OWNER='taka92aki', GH_REPO='daily-schedule-app', GH_PATH='data/state.json';
 const GH_API_URL=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
 
@@ -776,11 +780,60 @@ function getLastSynced(){return parseInt(localStorage.getItem('sync_last_at')||'
 function setLastSynced(t){localStorage.setItem('sync_last_at',String(t));}
 function b64EncodeUtf8(str){return btoa(unescape(encodeURIComponent(str)));}
 
+// ── Auto-push: debounced so a burst of edits (e.g. dragging a resize
+// handle) becomes one commit, not dozens. Skipped while suppressAutoPush
+// is set (e.g. while applying a just-pulled remote state) and while no
+// token is saved on this device (nothing to auto-push with).
+let suppressAutoPush=false;
+let autoPushTimer=null;
+function scheduleAutoPush(){
+  if(suppressAutoPush)return;
+  if(!getPat())return;
+  clearTimeout(autoPushTimer);
+  autoPushTimer=setTimeout(runAutoPush,2500);
+}
+async function runAutoPush(){
+  try{
+    const remote=await fetchRemote();
+    if(remote&&remote.updatedAt>getLastSynced()){
+      // Someone else pushed more recently than what we last saw — pull
+      // that in first so we don't clobber it, then push our own edits
+      // on top (last-write-wins, but at least we saw the other change).
+      applySyncPayload(remote);
+    }
+    await pushToGithub();
+    setSyncIndicator('ok');
+  }catch(err){
+    setSyncIndicator('err');
+  }
+}
+// ── Auto-pull: on load, whenever the app regains focus/visibility, and
+// on a slow background interval while it stays open/visible.
+let autoPullTimer=null;
+async function autoPullIfNewer(){
+  try{
+    const remote=await fetchRemote();
+    if(remote&&remote.updatedAt>getLastSynced()){
+      applySyncPayload(remote);
+      setSyncIndicator('ok');
+      toast('最新の内容に更新しました');
+    }
+  }catch(err){/* offline or rate-limited: stay on local data silently */}
+}
+function setSyncIndicator(state){
+  const btn=document.getElementById('sync-btn');
+  if(!btn)return;
+  btn.classList.remove('sync-ok','sync-err');
+  if(state==='ok')btn.classList.add('sync-ok');
+  if(state==='err')btn.classList.add('sync-err');
+}
+
 function buildSyncPayload(){
   const td={};Object.keys(tasksDone).forEach(d=>{td[d]=[...tasksDone[d]];});
   return{tasks,schedule,tasksDone:td,updatedAt:Date.now()};
 }
 function applySyncPayload(remote){
+  suppressAutoPush=true;
   tasks=remote.tasks||[];
   schedule=remote.schedule||{};
   tasksDone={};
@@ -789,6 +842,7 @@ function applySyncPayload(remote){
   initDay(currentDate);
   renderTabs();renderSchedule();renderTasks();
   setLastSynced(remote.updatedAt||Date.now());
+  suppressAutoPush=false;
 }
 async function fetchRemote(){
   // raw.githubusercontent.com sits behind a CDN that can cache the "main"
@@ -840,10 +894,10 @@ function openSyncSheet(){
   const listEl=document.getElementById('sheet-list');
   listEl.innerHTML=`
     <div class="sync-pad">
-      <div class="sync-status">最終同期: <b id="sync-last">${fmtSyncTime(getLastSynced())}</b><br>この端末での操作をPC/iPhone間で共有します。</div>
+      <div class="sync-status">最終同期: <b id="sync-last">${fmtSyncTime(getLastSynced())}</b><br>${pat?'自動で同期しています（編集後は数秒、起動時・切替時は自動で反映）。':'トークンを保存すると、以後は自動で同期されます。'}</div>
       <div class="sync-row">
-        <button class="sync-btn pull" id="sync-pull-btn">⬇️ GitHubから取り込む</button>
-        <button class="sync-btn push" id="sync-push-btn" ${pat?'':'disabled'}>⬆️ この端末の内容をアップロード</button>
+        <button class="sync-btn pull" id="sync-pull-btn">⬇️ 今すぐ取り込む</button>
+        <button class="sync-btn push" id="sync-push-btn" ${pat?'':'disabled'}>⬆️ 今すぐアップロード</button>
       </div>
       <div id="sync-token-area"></div>
       <div class="sync-msg" id="sync-msg"></div>
@@ -885,7 +939,8 @@ function renderSyncTokenArea(){
       if(!v){showSyncMsg('トークンを入力してください','err');return;}
       setPat(v);renderSyncTokenArea();
       document.getElementById('sync-push-btn').disabled=false;
-      showSyncMsg('トークンを保存しました','ok');
+      showSyncMsg('トークンを保存しました。自動同期を開始します…','ok');
+      runAutoPush();
     };
   }
 }
@@ -955,6 +1010,16 @@ renderTabs();
 renderSchedule();
 renderTasks();
 setInterval(()=>renderTabs(),60000);
+
+// Auto-pull: catch up on load, whenever the app regains focus/visibility,
+// and periodically while it stays open — so switching devices "just works"
+// without an explicit sync tap.
+autoPullIfNewer();
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')autoPullIfNewer();
+});
+window.addEventListener('focus',()=>autoPullIfNewer());
+setInterval(()=>{if(document.visibilityState==='visible')autoPullIfNewer();},30000);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
