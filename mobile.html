@@ -84,6 +84,11 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .rhandle,.rhandle-top{position:absolute;left:50%;transform:translateX(-50%);width:76px;height:34px;display:flex;align-items:center;justify-content:center;touch-action:none;z-index:55;}
 .rhandle{bottom:-24px;cursor:s-resize;}
 .rhandle-top{top:-24px;cursor:n-resize;}
+/* Adjacent block on that side: don't reach past the shared edge, or its
+   hit-zone would overlap the neighboring block's own handle there and
+   (same z-index, later paint order) steal touches meant for this one. */
+.rhandle.tight{bottom:0;height:20px;}
+.rhandle-top.tight{top:0;height:20px;}
 .rhandle::after,.rhandle-top::after{content:'';width:34px;height:5px;background:rgba(0,0,0,.18);border-radius:3px;transition:background .1s,transform .1s;}
 .task-block.done .rhandle::after,.task-block.done .rhandle-top::after{background:rgba(255,255,255,.4);}
 .rhandle.rh-active::after,.rhandle-top.rh-active::after{background:var(--accent);transform:scaleX(1.15);}
@@ -392,12 +397,15 @@ function renderSchedule(){
         });
         attachLongPress(block,()=>openSlotMenu(si,entry));
 
-        const rht=document.createElement('div');rht.className='rhandle-top';
+        const hasPrevAdjacent=si>0&&(daySchd[si-1]!=null||occ.has(si-1));
+        const hasNextAdjacent=si+span<SLOTS.length&&(daySchd[si+span]!=null||occ.has(si+span));
+
+        const rht=document.createElement('div');rht.className='rhandle-top'+(hasPrevAdjacent?' tight':'');
         if(resizingTop&&resizingTop.curSi===si)rht.classList.add('rh-active');
         attachResizeTopPointer(rht,si,span,entry.ti,!!entry.done);
         block.appendChild(rht);
 
-        const rh=document.createElement('div');rh.className='rhandle';
+        const rh=document.createElement('div');rh.className='rhandle'+(hasNextAdjacent?' tight':'');
         if(resizing&&resizing.si===si)rh.classList.add('rh-active');
         attachResizePointer(rh,si,span);
         block.appendChild(rh);
