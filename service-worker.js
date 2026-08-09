@@ -1,4 +1,4 @@
-const CACHE = 'daily-schedule-v16';
+const CACHE = 'daily-schedule-v17';
 const ASSETS = [
   './mobile.html',
   './manifest.json',
