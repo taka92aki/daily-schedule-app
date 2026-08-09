@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ DAILY SCHEDULE v6</title>
+<title>Daily Task</title>
 <style>
 :root {
-  --bg:#f4f6fb;--bg3:#f0f3fa;--border:#dde3f0;--border2:#edf0f8;
-  --text:#1e2a45;--text2:#7a8ba8;
-  --accent:#4a6cf7;--accent2:#6c47ff;
+  --bg:#faf9fd;--bg3:#f3effb;--border:#e6def5;--border2:#f0eaf9;
+  --text:#241b3d;--text2:#8b7fa8;
+  --accent:#8b5cf6;--accent2:#6d28d9;
   --green:#10b981;--red:#ef4444;
   --row-h:30px;
 }
@@ -22,14 +22,14 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .app-logo{font-size:17px;font-weight:800;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .spacer{flex:1;}
 .hdr-btn{padding:4px 13px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text2);transition:all .15s;position:relative;}
-.hdr-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(74,108,247,.05);}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(139,92,246,.05);}
 .hdr-btn.danger:hover{border-color:var(--red);color:var(--red);}
 .hdr-btn.sync-ok::after,.hdr-btn.sync-err::after{content:'';position:absolute;top:1px;right:1px;width:7px;height:7px;border-radius:50%;border:1.5px solid #fff;}
 .hdr-btn.sync-ok::after{background:var(--green);}
 .hdr-btn.sync-err::after{background:var(--red);}
 .week-nav{display:flex;align-items:center;gap:2px;}
 .warr{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:4px 7px;border-radius:5px;transition:all .15s;}
-.warr:hover{color:var(--accent);background:rgba(74,108,247,.07);}
+.warr:hover{color:var(--accent);background:rgba(139,92,246,.07);}
 .dtabs{display:flex;gap:2px;flex:1;padding:2px 0 0;}
 .dtab{flex:1;padding:5px 2px;text-align:center;cursor:pointer;border-radius:7px 7px 0 0;border:1.5px solid transparent;border-bottom:none;transition:all .15s;position:relative;bottom:-1px;}
 .dtab .dn{font-weight:700;font-size:13px;color:var(--text2);}
@@ -71,8 +71,8 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .no-input.has-task{color:var(--accent);font-weight:800;}
 .time-cell{text-align:center;color:var(--text2);font-size:13px;white-space:nowrap;border-right:1px solid var(--border2);}
 .slot-row.hour-start td{border-top:1px solid var(--border);}
-.slot-row:hover{background:rgba(74,108,247,.025);}
-.slot-row.drag-over{background:rgba(74,108,247,.07);outline:1.5px dashed rgba(74,108,247,.5);outline-offset:-1px;}
+.slot-row:hover{background:rgba(139,92,246,.025);}
+.slot-row.drag-over{background:rgba(139,92,246,.07);outline:1.5px dashed rgba(139,92,246,.5);outline-offset:-1px;}
 .content-cell{padding:2px 3px;vertical-align:top;}
 
 /* ── Task block (schedule left) ── */
@@ -96,11 +96,11 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 /* Resize handles (task block) */
 .rhandle{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:36px;height:6px;background:rgba(0,0,0,.1);border-radius:3px;cursor:s-resize;transition:background .15s;}
 .rhandle::before{content:'';display:block;margin:2px auto 0;width:18px;height:2px;background:rgba(0,0,0,.2);border-radius:1px;}
-.rhandle:hover{background:rgba(74,108,247,.4);}
+.rhandle:hover{background:rgba(139,92,246,.4);}
 .task-block.done .rhandle,.task-block.done .rhandle::before{background:rgba(255,255,255,.25);}
 .rhandle-top{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:36px;height:6px;background:rgba(0,0,0,.1);border-radius:3px;cursor:n-resize;transition:background .15s;}
 .rhandle-top::before{content:'';display:block;margin:2px auto 0;width:18px;height:2px;background:rgba(0,0,0,.2);border-radius:1px;}
-.rhandle-top:hover{background:rgba(74,108,247,.4);}
+.rhandle-top:hover{background:rgba(139,92,246,.4);}
 .task-block.done .rhandle-top,.task-block.done .rhandle-top::before{background:rgba(255,255,255,.25);}
 
 .clear-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;width:100%;padding:0;opacity:0;transition:opacity .1s,color .1s;}
@@ -113,21 +113,25 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .task-ph{background:var(--bg3);padding:7px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;}
 .task-ph span{flex:1;}
 .task-hint{font-size:10px;color:var(--text2);opacity:.6;font-weight:400;text-transform:none;letter-spacing:0;}
-.add-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:5px;padding:3px 11px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 6px rgba(74,108,247,.3);}
+.add-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:5px;padding:3px 11px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 6px rgba(139,92,246,.3);}
 .add-btn:hover{opacity:.85;}
 
 .task-list{flex:1;}
 .t-item{
   display:flex;align-items:center;gap:7px;
   padding:6px 10px;border-bottom:1px solid var(--border2);
-  cursor:grab;transition:background .1s;position:relative;
+  cursor:grab;transition:background .1s,box-shadow .15s,transform .15s;position:relative;
 }
 .t-item:hover{background:var(--bg3);}
 .t-item:active{cursor:grabbing;}
-.t-item.dragging-self{opacity:.4;}
-.t-drag-handle{font-size:14px;color:#c3cbdd;flex-shrink:0;cursor:grab;padding:2px;line-height:1;}
-.t-drag-handle:hover{color:var(--text2);}
-.t-drag-handle:active{cursor:grabbing;}
+.t-item.dragging-self{
+  position:relative;z-index:20;background:#fff;border-radius:8px;
+  box-shadow:0 10px 24px rgba(109,40,217,.18),0 2px 8px rgba(109,40,217,.12);
+  transform:scale(1.015);
+}
+.t-drag-handle{font-size:15px;color:#c9bfe0;flex-shrink:0;cursor:grab;padding:3px;line-height:1;border-radius:5px;transition:background .1s,color .1s;}
+.t-drag-handle:hover{color:var(--text2);background:var(--bg3);}
+.t-drag-handle:active,.t-item.dragging-self .t-drag-handle{cursor:grabbing;color:var(--accent2);background:var(--bg3);}
 
 /* Reorder indicator */
 .t-item.drag-above::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px;}
@@ -136,19 +140,16 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 /* Done state */
 .t-item.done{background:#cbd5e1 !important;cursor:grab;}
 .t-item.done .t-input{color:#475569;}
-.t-item.done .t-no{opacity:.5;}
 
 /* In-schedule highlight */
-.t-item.in-schedule{background:#dde3f0;}
-.t-item.in-schedule .t-no{color:var(--accent);font-weight:800;}
-.t-item.in-schedule .t-input{color:#3a4f7a;}
+.t-item.in-schedule{background:var(--border2);}
+.t-item.in-schedule .t-input{color:var(--accent2);}
 
 /* Done button */
 .t-done-btn{width:20px;height:20px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:all .15s;}
 .t-done-btn:hover{border-color:var(--green);color:var(--green);}
 .t-item.done .t-done-btn{background:var(--green);border-color:var(--green);color:#fff;}
 
-.t-no{font-size:11px;font-weight:700;color:var(--text2);width:22px;text-align:center;flex-shrink:0;}
 .t-name{flex:1;min-width:0;position:relative;}
 
 /* Input (task name) */
@@ -162,7 +163,7 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 /* Edit mode: dblclick entered */
 .t-input:not([readonly]){
   cursor:text;
-  background:rgba(74,108,247,.07);
+  background:rgba(139,92,246,.07);
   border:1.5px solid var(--accent);
   padding:0 3px;
 }
@@ -178,15 +179,15 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .t-del:hover{color:var(--red)!important;}
 
 /* ── Context menu ── */
-.ctx{position:fixed;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(74,108,247,.15);z-index:9999;min-width:190px;padding:4px 0;display:none;}
+.ctx{position:fixed;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(139,92,246,.15);z-index:9999;min-width:190px;padding:4px 0;display:none;}
 .ci{padding:8px 14px;cursor:pointer;font-size:14px;color:var(--text);display:flex;align-items:center;gap:8px;transition:background .1s;}
-.ci:hover{background:rgba(74,108,247,.06);}
+.ci:hover{background:rgba(139,92,246,.06);}
 .ci.danger{color:var(--red);}
 .ci.danger:hover{background:rgba(239,68,68,.05);}
 .cdiv{border-top:1px solid var(--border);margin:4px 0;}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:8px 20px;border-radius:20px;font-size:14px;z-index:9998;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(30,42,69,.25);}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:8px 20px;border-radius:20px;font-size:14px;z-index:9998;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(36,27,61,.25);}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
@@ -207,7 +208,7 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .sync-overlay.on{display:block;}
 .sync-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:14px;
   width:380px;max-width:90vw;max-height:80vh;overflow-y:auto;z-index:9991;display:none;
-  box-shadow:0 12px 40px rgba(30,42,69,.25);}
+  box-shadow:0 12px 40px rgba(36,27,61,.25);}
 .sync-modal.on{display:block;}
 .sync-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;}
 .sync-close{background:none;border:none;font-size:16px;color:var(--text2);cursor:pointer;}
@@ -237,7 +238,7 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 
 <div class="hdr">
   <div class="hdr-top">
-    <div class="app-logo">⚡ DAILY SCHEDULE</div>
+    <div class="app-logo">Daily Task</div>
     <span class="spacer"></span>
     <button class="hdr-btn" id="sync-hdr-btn" onclick="openSyncModal()">🔄 同期</button>
     <button class="hdr-btn" onclick="goToday()">Today</button>
@@ -254,14 +255,12 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
   <div class="sch-panel" id="sch-panel">
     <table class="sch-table" id="sch-table">
       <colgroup>
-        <col id="col-no-el">
         <col id="col-time-el">
         <col>
         <col id="col-clear-el" style="width:26px">
       </colgroup>
       <thead>
         <tr>
-          <th id="th-no" style="position:relative">No.<div class="col-rh" id="rh-no"></div></th>
           <th id="th-time" style="position:relative">時間<div class="col-rh" id="rh-time"></div></th>
           <th>内容</th>
           <th class="col-clear"></th>
@@ -321,7 +320,7 @@ let dragPayload=null;      // for schedule drops
 let taskDragTi=null;       // ti currently being dragged from task list
 let resizing=null, resizingTop=null;
 let lastRender=0, lastRenderTop=0;
-let colWidths={no:38, time:54, taskPanel:300};
+let colWidths={time:54, taskPanel:300};
 
 // ════ DATE ════
 function todayStr(){const d=new Date();return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
@@ -356,13 +355,11 @@ function load(){
 
 // ════ COLUMN RESIZE ════
 function applyColWidths(){
-  document.getElementById('col-no-el').style.width=colWidths.no+'px';
   document.getElementById('col-time-el').style.width=colWidths.time+'px';
   const tp=document.getElementById('task-panel');
   tp.style.width=tp.style.minWidth=tp.style.maxWidth=colWidths.taskPanel+'px';
 }
 function setupColResize(){
-  setupColHandle('rh-no','no',28,120);
   setupColHandle('rh-time','time',40,160);
   const pr=document.getElementById('panel-rh');
   pr.addEventListener('mousedown',e=>{
@@ -463,33 +460,8 @@ function renderSchedule(){
     if(time.endsWith(':00'))tr.classList.add('hour-start');
     tr.dataset.si=si;
 
-    // No. cell (editable number input)
-    const tdNo=document.createElement('td');tdNo.className='col-no no-cell';
-    if(!isOcc){
-      const noInp=document.createElement('input');
-      noInp.type='number';
-      noInp.className='no-input'+(hasTask?' has-task':'');
-      noInp.min='1';noInp.max=tasks.length;
-      noInp.value=hasTask?(entry.ti+1):'';
-      noInp.title='タスク番号を入力してEnter';
-      noInp.addEventListener('mousedown',e=>e.stopPropagation());
-      noInp.addEventListener('keydown',e=>{if(e.key==='Enter')noInp.blur();e.stopPropagation();});
-      noInp.addEventListener('blur',()=>{
-        const val=parseInt(noInp.value,10);
-        if(!isNaN(val)&&val>=1&&val<=tasks.length){
-          const ti=val-1;
-          const dSchd=schedule[currentDate]||{};
-          dSchd[si]={ti,span:1,done:false};
-          schedule[currentDate]=dSchd;autoMergeDay(currentDate);save();renderSchedule();renderTasks();
-        } else if(noInp.value===''){
-          if(hasTask){delete schedule[currentDate][si];autoMergeDay(currentDate);save();renderSchedule();renderTasks();}
-        }
-      });
-      tdNo.appendChild(noInp);
-    }
-
     const tdTime=document.createElement('td');tdTime.className='col-time time-cell';tdTime.textContent=time;
-    tr.appendChild(tdNo);tr.appendChild(tdTime);
+    tr.appendChild(tdTime);
 
     if(!isOcc){
       const tdC=document.createElement('td');tdC.className='content-cell';
@@ -690,8 +662,6 @@ function renderTasks(){
       save();renderTasks();
     };
 
-    const noEl=document.createElement('span');noEl.className='t-no';noEl.textContent=ti+1;
-
     // Task name area
     const nameDiv=document.createElement('div');nameDiv.className='t-name';
     const inp=document.createElement('input');
@@ -738,7 +708,7 @@ function renderTasks(){
     del.addEventListener('mousedown',e=>e.stopPropagation());
     del.onclick=e=>{e.stopPropagation();deleteTask(ti);};
 
-    item.appendChild(doneBtn);item.appendChild(noEl);item.appendChild(nameDiv);item.appendChild(del);
+    item.appendChild(doneBtn);item.appendChild(nameDiv);item.appendChild(del);
     item.addEventListener('contextmenu',e=>{e.preventDefault();showTaskCtx(e,ti,name);});
     list.appendChild(item);
   });
@@ -748,21 +718,26 @@ function renderTasks(){
 // Listeners are bound to `document` (not the handle) so the drag keeps
 // tracking the mouse even if something else re-renders the list mid-drag.
 let pcTaskDrag=null;
+// The dragged row is physically moved in the DOM as the mouse passes each
+// neighbor's midpoint, so the rest of the list visibly shifts to make room
+// while dragging — the same live-reorder feedback used on mobile.
 function attachPcTaskDrag(handle,item,ti){
   handle.addEventListener('mousedown',e=>e.stopPropagation()); // don't also start the item's native HTML5 drag
   handle.addEventListener('pointerdown',e=>{
     e.preventDefault();e.stopPropagation();
     const listEl=document.getElementById('task-list');
-    const items=[...listEl.children];
-    const startIndex=items.indexOf(item);
-    pcTaskDrag={ti,startIndex,curIndex:startIndex,startY:e.clientY,itemH:item.offsetHeight};
+    const startIndex=[...listEl.children].indexOf(item);
     item.classList.add('dragging-self');
 
     const mv=ev=>{
-      if(!pcTaskDrag)return;
-      const dy=ev.clientY-pcTaskDrag.startY;
-      const shift=Math.round(dy/pcTaskDrag.itemH);
-      pcTaskDrag.curIndex=Math.max(0,Math.min(items.length-1,pcTaskDrag.startIndex+shift));
+      const siblings=[...listEl.children].filter(el=>el!==item);
+      let insertBeforeEl=null;
+      for(const sib of siblings){
+        const r=sib.getBoundingClientRect();
+        if(ev.clientY<r.top+r.height/2){insertBeforeEl=sib;break;}
+      }
+      if(insertBeforeEl)listEl.insertBefore(item,insertBeforeEl);
+      else listEl.appendChild(item);
       const rect=listEl.getBoundingClientRect();
       if(ev.clientY<rect.top+40)listEl.scrollBy(0,-8);
       if(ev.clientY>rect.bottom-40)listEl.scrollBy(0,8);
@@ -772,12 +747,12 @@ function attachPcTaskDrag(handle,item,ti){
       document.removeEventListener('pointermove',mv);
       document.removeEventListener('pointerup',up);
       document.removeEventListener('pointercancel',up);
-      if(pcTaskDrag&&pcTaskDrag.curIndex!==pcTaskDrag.startIndex){
-        const targetItem=items[pcTaskDrag.curIndex];
-        const targetTi=parseInt(targetItem.dataset.ti,10);
-        reorderTask(pcTaskDrag.ti,targetTi,pcTaskDrag.curIndex>pcTaskDrag.startIndex);
+      const finalIndex=[...listEl.children].indexOf(item);
+      if(finalIndex!==startIndex){
+        const prev=item.previousElementSibling,next=item.nextElementSibling;
+        if(prev)reorderTask(ti,parseInt(prev.dataset.ti,10),true);
+        else if(next)reorderTask(ti,parseInt(next.dataset.ti,10),false);
       }
-      pcTaskDrag=null;
     };
     document.addEventListener('pointermove',mv);
     document.addEventListener('pointerup',up);

@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="スケジュール">
-<meta name="theme-color" content="#4a6cf7">
+<meta name="apple-mobile-web-app-title" content="Daily Task">
+<meta name="theme-color" content="#6d28d9">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
-<title>⚡ DAILY SCHEDULE</title>
+<title>Daily Task</title>
 <style>
 :root {
-  --bg:#f4f6fb;--bg3:#f0f3fa;--border:#dde3f0;--border2:#edf0f8;
-  --text:#1e2a45;--text2:#7a8ba8;
-  --accent:#4a6cf7;--accent2:#6c47ff;
+  --bg:#faf9fd;--bg3:#f3effb;--border:#e6def5;--border2:#f0eaf9;
+  --text:#241b3d;--text2:#8b7fa8;
+  --accent:#8b5cf6;--accent2:#6d28d9;
   --green:#10b981;--red:#ef4444;
   --row-h:44px;
   --sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);
@@ -92,29 +92,30 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .rhandle::after,.rhandle-top::after{content:'';width:34px;height:5px;background:rgba(0,0,0,.18);border-radius:3px;transition:background .1s,transform .1s;}
 .task-block.done .rhandle::after,.task-block.done .rhandle-top::after{background:rgba(255,255,255,.4);}
 .rhandle.rh-active::after,.rhandle-top.rh-active::after{background:var(--accent);transform:scaleX(1.15);}
-.rhandle.rh-active,.rhandle-top.rh-active{background:rgba(74,108,247,.1);border-radius:10px;}
+.rhandle.rh-active,.rhandle-top.rh-active{background:rgba(139,92,246,.1);border-radius:10px;}
 
 /* ── Task list (tab) ── */
 .task-ph{background:var(--bg3);padding:9px 14px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5;}
 .task-ph span{flex:1;}
-.add-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:14px;font-weight:600;box-shadow:0 2px 6px rgba(74,108,247,.3);}
+.add-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:14px;font-weight:600;box-shadow:0 2px 6px rgba(139,92,246,.3);}
 .add-btn:active{opacity:.8;}
 .task-list{background:#fff;}
-.t-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border2);min-height:var(--row-h);position:relative;background:#fff;}
-.t-item.done{background:#f1f4f9;}
-.t-item.done .t-name-txt{color:#94a3b8;text-decoration:line-through;}
-.t-item.in-schedule .t-no{color:var(--accent);font-weight:800;}
-.t-item.dragging-self{opacity:.35;}
-.t-item.drag-above{box-shadow:inset 0 2px 0 var(--accent);}
-.t-item.drag-below{box-shadow:inset 0 -2px 0 var(--accent);}
+.t-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border2);min-height:var(--row-h);position:relative;background:#fff;transition:box-shadow .15s,transform .15s;}
+.t-item.done{background:#f8f6fc;}
+.t-item.done .t-name-txt{color:#a99bc4;text-decoration:line-through;}
+.t-item.dragging-self{
+  position:relative;z-index:20;background:#fff;border-radius:10px;
+  box-shadow:0 10px 24px rgba(109,40,217,.18),0 2px 8px rgba(109,40,217,.12);
+  transform:scale(1.02);
+}
 
-.t-handle{font-size:16px;color:#c3cbdd;padding:4px 2px;flex-shrink:0;touch-action:none;}
+.t-handle{font-size:17px;color:#c9bfe0;padding:6px;flex-shrink:0;touch-action:none;border-radius:6px;transition:background .1s,color .1s;}
+.t-handle:active,.t-item.dragging-self .t-handle{color:var(--accent2);background:var(--bg3);}
 .t-done-btn{width:26px;height:26px;border-radius:50%;flex-shrink:0;border:1.5px solid var(--border);background:#fff;font-size:12px;color:transparent;display:flex;align-items:center;justify-content:center;}
 .t-item.done .t-done-btn{background:var(--green);border-color:var(--green);color:#fff;}
-.t-no{font-size:11px;font-weight:700;color:var(--text2);width:20px;text-align:center;flex-shrink:0;}
 .t-name{flex:1;min-width:0;}
 .t-name-txt{width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;color:var(--text);}
-.t-input{width:100%;background:rgba(74,108,247,.07);border:1.5px solid var(--accent);border-radius:5px;color:var(--text);font-size:15px;font-family:inherit;outline:none;padding:4px 6px;}
+.t-input{width:100%;background:rgba(139,92,246,.07);border:1.5px solid var(--accent);border-radius:5px;color:var(--text);font-size:15px;font-family:inherit;outline:none;padding:4px 6px;}
 .t-edit{background:none;border:none;font-size:15px;padding:5px;color:var(--text2);flex-shrink:0;}
 .t-del{background:none;border:none;font-size:18px;padding:5px;color:#c3cbdd;flex-shrink:0;}
 
@@ -137,8 +138,8 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .sheet-item{display:flex;align-items:center;gap:10px;padding:13px 18px;font-size:15px;border-bottom:1px solid var(--border2);}
 .sheet-item:active{background:var(--bg3);}
 .sheet-item.danger{color:var(--red);}
-.sheet-item .si-no{font-size:11px;font-weight:700;color:var(--text2);width:20px;}
 .sheet-item .si-ic{width:20px;text-align:center;}
+.sheet-item .si-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:1.5px solid;}
 .sheet-empty{padding:24px;text-align:center;color:var(--text2);font-size:13px;}
 
 /* ── Sync panel (reuses .sheet) ── */
@@ -164,7 +165,7 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 .sync-hint ol{padding-left:18px;margin-top:4px;}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:calc(var(--sab) + 78px);left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;z-index:200;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(30,42,69,.25);}
+.toast{position:fixed;bottom:calc(var(--sab) + 78px);left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;z-index:200;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(36,27,61,.25);}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── Chip colors ── */
@@ -186,7 +187,7 @@ input,textarea{user-select:text;-webkit-user-select:text;}
 
 <div class="hdr">
   <div class="hdr-top">
-    <div class="app-logo">⚡ DAILY SCHEDULE</div>
+    <div class="app-logo">Daily Task</div>
     <span class="spacer"></span>
     <button class="hdr-btn" id="sync-btn" onclick="openSyncSheet()">🔄</button>
     <button class="hdr-btn" onclick="goToday()">今日</button>
@@ -446,7 +447,7 @@ function attachLongPress(el,fn){
 // ════ TASK PICKER SHEET (place task into empty slot) ════
 function openTaskPicker(si){
   const rows=tasks.map((name,ti)=>({
-    icon:String(ti+1),
+    dot:cc(ti),
     text:name||'(無題タスク)',
     action:()=>{
       const daySchd=schedule[currentDate]||{};
@@ -490,7 +491,8 @@ function openSheet(title,items,isPicker){
   items.forEach(it=>{
     const row=document.createElement('div');
     row.className='sheet-item'+(it.danger?' danger':'');
-    row.innerHTML=`<span class="${isPicker?'si-no':'si-ic'}">${it.icon}</span><span>${escH(it.text)}</span>`;
+    const iconHtml=it.dot?`<span class="si-dot ${it.dot}"></span>`:`<span class="si-ic">${it.icon||''}</span>`;
+    row.innerHTML=`${iconHtml}<span>${escH(it.text)}</span>`;
     row.addEventListener('click',()=>{it.action();closeSheet();});
     listEl.appendChild(row);
   });
@@ -639,8 +641,6 @@ function renderTasks(){
     doneBtn.className='t-done-btn';doneBtn.textContent='✓';
     doneBtn.onclick=e=>{e.stopPropagation();if(done.has(ti))done.delete(ti);else done.add(ti);save();renderTasks();};
 
-    const noEl=document.createElement('span');noEl.className='t-no';noEl.textContent=ti+1;
-
     const nameDiv=document.createElement('div');nameDiv.className='t-name';
     const txt=document.createElement('div');txt.className='t-name-txt';txt.textContent=name||'(無題タスク)';
     txt.onclick=()=>{
@@ -655,7 +655,7 @@ function renderTasks(){
     const del=document.createElement('button');del.className='t-del';del.textContent='×';
     del.onclick=e=>{e.stopPropagation();deleteTask(ti);};
 
-    item.appendChild(handle);item.appendChild(doneBtn);item.appendChild(noEl);item.appendChild(nameDiv);item.appendChild(editBtn);item.appendChild(del);
+    item.appendChild(handle);item.appendChild(doneBtn);item.appendChild(nameDiv);item.appendChild(editBtn);item.appendChild(del);
     list.appendChild(item);
   });
 }
@@ -679,19 +679,27 @@ function enterEditMode(nameDiv,ti,name){
 // ════ TASK REORDER (pointer drag via handle, or long-press anywhere) ════
 // Listeners are bound to `document` (not the handle/item) so the drag keeps
 // tracking the finger even if something else re-renders the list mid-drag —
-// the same fix applied earlier to the schedule resize handles.
+// the same fix applied earlier to the schedule resize handles. The dragged
+// row is physically moved in the DOM as the finger passes each neighbor's
+// midpoint, so the rest of the list visibly shifts to make room — that's
+// what actually makes "where is this going" clear while dragging.
 function startTaskDragTracking(item,ti,startClientY){
   const listEl=document.getElementById('task-list');
-  const items=[...listEl.children];
-  const startIndex=items.indexOf(item);
-  taskDrag={ti,startIndex,curIndex:startIndex,startY:startClientY,itemH:item.offsetHeight};
+  const startIndex=[...listEl.children].indexOf(item);
+  let curIndex=startIndex;
   item.classList.add('dragging-self');
 
   const mv=ev=>{
-    if(!taskDrag)return;
-    const dy=ev.clientY-taskDrag.startY;
-    const shift=Math.round(dy/taskDrag.itemH);
-    taskDrag.curIndex=Math.max(0,Math.min(items.length-1,taskDrag.startIndex+shift));
+    const siblings=[...listEl.children].filter(el=>el!==item);
+    let insertBeforeEl=null;
+    for(const sib of siblings){
+      const r=sib.getBoundingClientRect();
+      if(ev.clientY<r.top+r.height/2){insertBeforeEl=sib;break;}
+    }
+    if(insertBeforeEl)listEl.insertBefore(item,insertBeforeEl);
+    else listEl.appendChild(item);
+    curIndex=[...listEl.children].indexOf(item);
+
     const rect=listEl.getBoundingClientRect();
     if(ev.clientY<rect.top+40)listEl.scrollBy(0,-8);
     if(ev.clientY>rect.bottom-40)listEl.scrollBy(0,8);
@@ -701,10 +709,9 @@ function startTaskDragTracking(item,ti,startClientY){
     document.removeEventListener('pointermove',mv);
     document.removeEventListener('pointerup',up);
     document.removeEventListener('pointercancel',up);
-    if(taskDrag&&taskDrag.curIndex!==taskDrag.startIndex){
-      reorderTask(taskDrag.ti,taskDrag.startIndex,taskDrag.curIndex);
+    if(curIndex!==startIndex){
+      reorderTask(ti,startIndex,curIndex);
     }
-    taskDrag=null;
   };
   document.addEventListener('pointermove',mv);
   document.addEventListener('pointerup',up);
