@@ -633,6 +633,7 @@ function renderTasks(){
 
     const handle=document.createElement('span');handle.className='t-handle';handle.textContent='⠿';
     attachTaskDrag(handle,item,ti);
+    attachTaskLongPressReorder(item,ti);
 
     const doneBtn=document.createElement('button');
     doneBtn.className='t-done-btn';doneBtn.textContent='✓';
@@ -642,7 +643,10 @@ function renderTasks(){
 
     const nameDiv=document.createElement('div');nameDiv.className='t-name';
     const txt=document.createElement('div');txt.className='t-name-txt';txt.textContent=name||'(無題タスク)';
-    txt.onclick=()=>{if(done.has(ti))done.delete(ti);else done.add(ti);save();renderTasks();};
+    txt.onclick=()=>{
+      if(item.dataset.suppressClick){delete item.dataset.suppressClick;return;}
+      if(done.has(ti))done.delete(ti);else done.add(ti);save();renderTasks();
+    };
     nameDiv.appendChild(txt);
 
     const editBtn=document.createElement('button');editBtn.className='t-edit';editBtn.textContent='✏️';
@@ -672,45 +676,70 @@ function enterEditMode(nameDiv,ti,name){
   inp.focus();inp.select();
 }
 
-// ════ TASK REORDER (pointer drag via handle) ════
+// ════ TASK REORDER (pointer drag via handle, or long-press anywhere) ════
+// Listeners are bound to `document` (not the handle/item) so the drag keeps
+// tracking the finger even if something else re-renders the list mid-drag —
+// the same fix applied earlier to the schedule resize handles.
+function startTaskDragTracking(item,ti,startClientY){
+  const listEl=document.getElementById('task-list');
+  const items=[...listEl.children];
+  const startIndex=items.indexOf(item);
+  taskDrag={ti,startIndex,curIndex:startIndex,startY:startClientY,itemH:item.offsetHeight};
+  item.classList.add('dragging-self');
+
+  const mv=ev=>{
+    if(!taskDrag)return;
+    const dy=ev.clientY-taskDrag.startY;
+    const shift=Math.round(dy/taskDrag.itemH);
+    taskDrag.curIndex=Math.max(0,Math.min(items.length-1,taskDrag.startIndex+shift));
+    const rect=listEl.getBoundingClientRect();
+    if(ev.clientY<rect.top+40)listEl.scrollBy(0,-8);
+    if(ev.clientY>rect.bottom-40)listEl.scrollBy(0,8);
+  };
+  const up=()=>{
+    item.classList.remove('dragging-self');
+    document.removeEventListener('pointermove',mv);
+    document.removeEventListener('pointerup',up);
+    document.removeEventListener('pointercancel',up);
+    if(taskDrag&&taskDrag.curIndex!==taskDrag.startIndex){
+      reorderTask(taskDrag.ti,taskDrag.startIndex,taskDrag.curIndex);
+    }
+    taskDrag=null;
+  };
+  document.addEventListener('pointermove',mv);
+  document.addEventListener('pointerup',up);
+  document.addEventListener('pointercancel',up);
+}
 function attachTaskDrag(handle,item,ti){
   handle.addEventListener('pointerdown',e=>{
-    e.preventDefault();
-    const listEl=document.getElementById('task-list');
-    const items=[...listEl.children];
-    const startIndex=items.indexOf(item);
-    taskDrag={ti,startIndex,curIndex:startIndex,startY:e.clientY,itemH:item.offsetHeight};
-    item.classList.add('dragging-self');
-    handle.setPointerCapture(e.pointerId);
-
-    const mv=ev=>{
-      if(!taskDrag)return;
-      const dy=ev.clientY-taskDrag.startY;
-      const shift=Math.round(dy/taskDrag.itemH);
-      let newIndex=Math.max(0,Math.min(items.length-1,taskDrag.startIndex+shift));
-      if(newIndex!==taskDrag.curIndex){
-        items.forEach(el=>el.classList.remove('drag-above','drag-below'));
-        taskDrag.curIndex=newIndex;
-      }
-      const listEl2=document.getElementById('task-list');
-      const rect=listEl2.getBoundingClientRect();
-      if(ev.clientY<rect.top+40)listEl2.scrollBy(0,-8);
-      if(ev.clientY>rect.bottom-40)listEl2.scrollBy(0,8);
-    };
-    const up=()=>{
-      item.classList.remove('dragging-self');
-      handle.removeEventListener('pointermove',mv);
-      handle.removeEventListener('pointerup',up);
-      handle.removeEventListener('pointercancel',up);
-      if(taskDrag&&taskDrag.curIndex!==taskDrag.startIndex){
-        reorderTask(taskDrag.ti,taskDrag.startIndex,taskDrag.curIndex);
-      }
-      taskDrag=null;
-    };
-    handle.addEventListener('pointermove',mv);
-    handle.addEventListener('pointerup',up);
-    handle.addEventListener('pointercancel',up);
+    e.preventDefault();e.stopPropagation();
+    startTaskDragTracking(item,ti,e.clientY);
   });
+}
+// Long-press anywhere on the row (except its buttons) also starts a
+// reorder drag — the small handle is easy to miss, this isn't.
+function attachTaskLongPressReorder(item,ti){
+  let pressTimer=null,sx=0,sy=0;
+  item.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.t-done-btn')||e.target.closest('.t-edit')||e.target.closest('.t-del')||e.target.closest('.t-handle')||e.target.closest('.t-input'))return;
+    sx=e.clientX;sy=e.clientY;
+    const startY=e.clientY;
+    pressTimer=setTimeout(()=>{
+      pressTimer=null;
+      item.dataset.suppressClick='1'; // a long-press that engaged drag shouldn't also toggle done on release
+      startTaskDragTracking(item,ti,startY);
+    },LONG_PRESS_MS);
+  });
+  const cancel=e=>{
+    if(pressTimer&&e.type==='pointermove'){
+      if(Math.abs(e.clientX-sx)>8||Math.abs(e.clientY-sy)>8){clearTimeout(pressTimer);pressTimer=null;}
+      return;
+    }
+    if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+  };
+  item.addEventListener('pointermove',cancel);
+  item.addEventListener('pointerup',cancel);
+  item.addEventListener('pointercancel',cancel);
 }
 
 function reorderTask(fromTi,fromIndex,toIndex){

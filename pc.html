@@ -125,6 +125,9 @@ body{font-family:'Segoe UI','Hiragino Sans','Helvetica Neue',Arial,sans-serif;ba
 .t-item:hover{background:var(--bg3);}
 .t-item:active{cursor:grabbing;}
 .t-item.dragging-self{opacity:.4;}
+.t-drag-handle{font-size:14px;color:#c3cbdd;flex-shrink:0;cursor:grab;padding:2px;line-height:1;}
+.t-drag-handle:hover{color:var(--text2);}
+.t-drag-handle:active{cursor:grabbing;}
 
 /* Reorder indicator */
 .t-item.drag-above::before{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px;}
@@ -652,9 +655,9 @@ function renderTasks(){
     const item=document.createElement('div');
     item.className='t-item'+(isDone?' done':'')+(isUsed?' in-schedule':'');
     item.dataset.ti=ti;
-    item.title='ドラッグ: 並替 or スケジュールへ配置 / ダブルクリック: 名称編集';
+    item.title='⠿ をドラッグ: 並替 / それ以外をドラッグ: スケジュールへ配置 / ダブルクリック: 名称編集';
 
-    // ── Drag: task list item → reorder OR copy to schedule ──
+    // ── Drag from anywhere but the handle → copy into the schedule (unchanged) ──
     item.draggable=true;
     item.addEventListener('dragstart',e=>{
       taskDragTi=ti;
@@ -666,28 +669,16 @@ function renderTasks(){
     item.addEventListener('dragend',()=>{
       item.classList.remove('dragging-self');
       taskDragTi=null;dragPayload=null;
-      document.querySelectorAll('.t-item').forEach(el=>el.classList.remove('drag-above','drag-below'));
     });
 
-    // Drag over another task item → show reorder indicator
-    item.addEventListener('dragover',e=>{
-      if(taskDragTi===null||taskDragTi===ti)return;
-      e.preventDefault();e.stopPropagation();
-      const rect=item.getBoundingClientRect();const mid=rect.top+rect.height/2;
-      document.querySelectorAll('.t-item').forEach(el=>el.classList.remove('drag-above','drag-below'));
-      item.classList.add(e.clientY<mid?'drag-above':'drag-below');
-    });
-    item.addEventListener('dragleave',e=>{
-      if(!item.contains(e.relatedTarget))item.classList.remove('drag-above','drag-below');
-    });
-    // Drop on another task item → reorder
-    item.addEventListener('drop',e=>{
-      if(taskDragTi===null||taskDragTi===ti)return;
-      e.preventDefault();e.stopPropagation();
-      const rect=item.getBoundingClientRect();
-      reorderTask(taskDragTi,ti,e.clientY>=rect.top+rect.height/2);
-      item.classList.remove('drag-above','drag-below');
-    });
+    // ── Drag the ⠿ handle → reorder within the list (pointer-based, not
+    // native HTML5 drag-and-drop: dropping directly on another list item
+    // via native drag/drop could overwrite it with a duplicate of the
+    // dragged task instead of reordering, so that path was removed). ──
+    const handle=document.createElement('span');handle.className='t-drag-handle';handle.textContent='⠿';
+    handle.draggable=false;
+    attachPcTaskDrag(handle,item,ti);
+    item.appendChild(handle);
 
     // Done toggle button
     const doneBtn=document.createElement('button');
@@ -750,6 +741,47 @@ function renderTasks(){
     item.appendChild(doneBtn);item.appendChild(noEl);item.appendChild(nameDiv);item.appendChild(del);
     item.addEventListener('contextmenu',e=>{e.preventDefault();showTaskCtx(e,ti,name);});
     list.appendChild(item);
+  });
+}
+
+// ════ REORDER TASKS (pointer drag via ⠿ handle) ════
+// Listeners are bound to `document` (not the handle) so the drag keeps
+// tracking the mouse even if something else re-renders the list mid-drag.
+let pcTaskDrag=null;
+function attachPcTaskDrag(handle,item,ti){
+  handle.addEventListener('mousedown',e=>e.stopPropagation()); // don't also start the item's native HTML5 drag
+  handle.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    const listEl=document.getElementById('task-list');
+    const items=[...listEl.children];
+    const startIndex=items.indexOf(item);
+    pcTaskDrag={ti,startIndex,curIndex:startIndex,startY:e.clientY,itemH:item.offsetHeight};
+    item.classList.add('dragging-self');
+
+    const mv=ev=>{
+      if(!pcTaskDrag)return;
+      const dy=ev.clientY-pcTaskDrag.startY;
+      const shift=Math.round(dy/pcTaskDrag.itemH);
+      pcTaskDrag.curIndex=Math.max(0,Math.min(items.length-1,pcTaskDrag.startIndex+shift));
+      const rect=listEl.getBoundingClientRect();
+      if(ev.clientY<rect.top+40)listEl.scrollBy(0,-8);
+      if(ev.clientY>rect.bottom-40)listEl.scrollBy(0,8);
+    };
+    const up=()=>{
+      item.classList.remove('dragging-self');
+      document.removeEventListener('pointermove',mv);
+      document.removeEventListener('pointerup',up);
+      document.removeEventListener('pointercancel',up);
+      if(pcTaskDrag&&pcTaskDrag.curIndex!==pcTaskDrag.startIndex){
+        const targetItem=items[pcTaskDrag.curIndex];
+        const targetTi=parseInt(targetItem.dataset.ti,10);
+        reorderTask(pcTaskDrag.ti,targetTi,pcTaskDrag.curIndex>pcTaskDrag.startIndex);
+      }
+      pcTaskDrag=null;
+    };
+    document.addEventListener('pointermove',mv);
+    document.addEventListener('pointerup',up);
+    document.addEventListener('pointercancel',up);
   });
 }
 
