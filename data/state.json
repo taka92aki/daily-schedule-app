@@ -1,383 +1,81 @@
 {
   "tasks": [
     "スケジュール作成",
-    "庶務( )",
+    "庶務(洗濯)",
     "#投資 高配当株",
     "#民泊 SEO確認／物件チェック",
     "【観光ガイド】Viator",
-    "Tour Guide案内",
     "思考時間・読書",
-    "民泊清掃",
+    "Tour Guide案内",
     "運動・サウナ",
     "【サイドFIRE学園】動画編集・台本作成",
-    "🏸運動🏸",
-    "お風呂・就寝準備",
+    "民泊清掃",
+    "Trip WorksとTrip Advisorの連携",
+    "5月イベント（リベ企画）",
+    "未来投資",
+    "SF学園イベント企画！",
     "本執筆",
-    "SF学園営業",
     "Relax",
+    "お風呂・就寝準備",
     "移動",
     "飲み会・夜ご飯",
     "お昼・シャワー",
-    "旅館業資料作成",
-    "ー"
+    "－"
   ],
   "schedule": {
     "2026-08-05": {
       "0": {
-        "ti": 19,
-        "span": 12,
-        "done": true
+        "ti": 20,
+        "span": 6,
+        "done": false
       },
-      "12": {
-        "ti": 17,
-        "span": 1,
-        "done": true
-      },
-      "13": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "14": {
-        "ti": 10,
-        "span": 1,
-        "done": true
-      },
-      "15": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "16": {
-        "ti": 14,
-        "span": 2,
-        "done": true
-      },
-      "18": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "19": {
-        "ti": 13,
-        "span": 3,
-        "done": true
-      },
-      "22": {
-        "ti": 16,
-        "span": 4,
-        "done": true
-      },
-      "26": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "27": {
-        "ti": 11,
-        "span": 4,
-        "done": true
-      },
-      "31": {
-        "ti": 19,
-        "span": 9,
-        "done": true
+      "32": {
+        "ti": 20,
+        "span": 8,
+        "done": false
       }
     },
     "2026-08-06": {
       "0": {
-        "ti": 19,
+        "ti": 20,
         "span": 6,
-        "done": true
+        "done": false
       },
       "6": {
-        "ti": 15,
+        "ti": 17,
         "span": 1,
-        "done": true
+        "done": false
       },
       "7": {
-        "ti": 7,
+        "ti": 9,
         "span": 4,
-        "done": true
+        "done": false
       },
       "11": {
-        "ti": 15,
+        "ti": 17,
         "span": 1,
-        "done": true
+        "done": false
       },
       "12": {
-        "ti": 2,
-        "span": 1,
-        "done": true
-      },
-      "13": {
-        "ti": 3,
-        "span": 1,
-        "done": true
-      },
-      "14": {
-        "ti": 4,
-        "span": 1,
-        "done": true
-      },
-      "15": {
-        "ti": 17,
-        "span": 1,
-        "done": true
-      },
-      "16": {
-        "ti": 9,
+        "ti": 8,
         "span": 4,
-        "done": true
-      },
-      "20": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "21": {
-        "ti": 9,
-        "span": 4,
-        "done": true
-      },
-      "25": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "26": {
-        "ti": 14,
-        "span": 2,
-        "done": true
-      },
-      "28": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "29": {
-        "ti": 11,
-        "span": 3,
-        "done": true
-      },
-      "32": {
-        "ti": 19,
-        "span": 8,
-        "done": true
-      }
-    },
-    "2026-08-09": {
-      "0": {
-        "ti": 19,
-        "span": 9,
-        "done": true
-      },
-      "9": {
-        "ti": 17,
-        "span": 1,
-        "done": true
-      },
-      "10": {
-        "ti": 1,
-        "span": 1,
-        "done": true
-      },
-      "11": {
-        "ti": 9,
-        "span": 2,
-        "done": true
-      },
-      "13": {
-        "ti": 15,
-        "span": 2,
-        "done": true
-      },
-      "15": {
-        "ti": 10,
-        "span": 2,
-        "done": true
-      },
-      "17": {
-        "ti": 15,
-        "span": 2,
-        "done": true
-      },
-      "19": {
-        "ti": 16,
-        "span": 11,
-        "done": false
-      },
-      "30": {
-        "ti": 15,
-        "span": 2,
         "done": false
       },
       "32": {
-        "ti": 19,
-        "span": 8,
-        "done": false
-      }
-    },
-    "2026-08-07": {
-      "0": {
-        "ti": 19,
-        "span": 6,
-        "done": true
-      },
-      "6": {
-        "ti": 2,
-        "span": 1,
-        "done": true
-      },
-      "7": {
-        "ti": 3,
-        "span": 1,
-        "done": true
-      },
-      "8": {
-        "ti": 4,
-        "span": 1,
-        "done": true
-      },
-      "9": {
-        "ti": 9,
-        "span": 4,
-        "done": true
-      },
-      "13": {
-        "ti": 17,
-        "span": 2,
-        "done": true
-      },
-      "15": {
-        "ti": 1,
-        "span": 1,
-        "done": true
-      },
-      "16": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "17": {
-        "ti": 14,
-        "span": 2,
-        "done": true
-      },
-      "19": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "20": {
-        "ti": 16,
-        "span": 10,
-        "done": true
-      },
-      "30": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "31": {
-        "ti": 11,
-        "span": 1,
-        "done": false
-      },
-      "32": {
-        "ti": 19,
-        "span": 8,
-        "done": false
-      }
-    },
-    "2026-08-08": {
-      "0": {
-        "ti": 19,
-        "span": 6,
-        "done": true
-      },
-      "6": {
-        "ti": 3,
-        "span": 1,
-        "done": true
-      },
-      "7": {
-        "ti": 4,
-        "span": 1,
-        "done": true
-      },
-      "8": {
-        "ti": 1,
-        "span": 1,
-        "done": true
-      },
-      "9": {
-        "ti": 9,
-        "span": 3,
-        "done": true
-      },
-      "12": {
-        "ti": 15,
-        "span": 1,
-        "done": true
-      },
-      "13": {
-        "ti": 17,
-        "span": 1,
-        "done": true
-      },
-      "14": {
-        "ti": 9,
-        "span": 2,
-        "done": true
-      },
-      "17": {
-        "ti": 9,
-        "span": 1,
-        "done": false
-      },
-      "18": {
-        "ti": 16,
-        "span": 12,
-        "done": false
-      },
-      "30": {
-        "ti": 15,
-        "span": 1,
-        "done": false
-      },
-      "31": {
-        "ti": 11,
-        "span": 1,
-        "done": false
-      },
-      "32": {
-        "ti": 19,
+        "ti": 20,
         "span": 8,
         "done": false
       }
     },
     "2026-08-10": {
       "0": {
-        "ti": 19,
-        "span": 10,
+        "ti": 20,
+        "span": 6,
         "done": false
       },
-      "10": {
-        "ti": 17,
-        "span": 1,
-        "done": false
-      }
-    },
-    "2026-08-03": {
-      "0": {
-        "ti": 6,
-        "span": 10,
-        "done": false
-      },
-      "10": {
-        "ti": 9,
-        "span": 1,
+      "32": {
+        "ti": 20,
+        "span": 8,
         "done": false
       }
     }
@@ -385,11 +83,7 @@
   "tasksDone": {
     "2026-08-05": [],
     "2026-08-06": [],
-    "2026-08-09": [],
-    "2026-08-07": [],
-    "2026-08-08": [],
-    "2026-08-10": [],
-    "2026-08-03": []
+    "2026-08-10": []
   },
-  "updatedAt": 1786336285715
+  "updatedAt": 1786336305886
 }
