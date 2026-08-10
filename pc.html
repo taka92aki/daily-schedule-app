@@ -940,7 +940,7 @@ async function autoPullIfNewer(){
       setSyncIndicator('ok');
       toast('最新の内容に更新しました');
     }
-  }catch(err){/* offline or rate-limited: stay on local data silently */}
+  }catch(err){setSyncIndicator('err');}
 }
 function setSyncIndicator(state){
   const btn=document.getElementById('sync-hdr-btn');
@@ -972,10 +972,15 @@ async function fetchRemote(){
   // query params entirely (it isn't designed for frequently-changing refs).
   // api.github.com reflects the current commit immediately, so use that for
   // reads instead — this is what actually makes "download" trustworthy.
-  const headers={Accept:'application/vnd.github.raw'};
   const pat=getPat();
-  if(pat)headers.Authorization='token '+pat;
-  const res=await fetch(GH_API_URL,{headers,cache:'no-store'});
+  let res=await fetch(GH_API_URL,{headers:pat?{Accept:'application/vnd.github.raw',Authorization:'token '+pat}:{Accept:'application/vnd.github.raw'},cache:'no-store'});
+  if(pat&&(res.status===401||res.status===403)){
+    // Reads don't need auth for a public repo — if the saved token is
+    // invalid/expired, retry without it instead of leaving auto-pull stuck
+    // failing silently forever (upload still needs a valid token, so that
+    // failure surfaces normally when the user explicitly uploads).
+    res=await fetch(GH_API_URL,{headers:{Accept:'application/vnd.github.raw'},cache:'no-store'});
+  }
   if(res.status===404)return null;
   if(!res.ok)throw new Error('取得に失敗しました ('+res.status+')');
   return res.json();
