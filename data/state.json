@@ -9,7 +9,6 @@
     "Tour Guide案内",
     "【サイドFIRE学園】動画編集・台本作成",
     "民泊清掃",
-    "Trip WorksとTrip Advisorの連携",
     "SF学園イベント企画！",
     "本執筆",
     "Relax",
@@ -23,24 +22,24 @@
   "schedule": {
     "2026-08-05": {
       "0": {
-        "ti": 18,
+        "ti": 17,
         "span": 6,
         "done": false
       },
       "32": {
-        "ti": 18,
+        "ti": 17,
         "span": 8,
         "done": false
       }
     },
     "2026-08-06": {
       "0": {
-        "ti": 18,
+        "ti": 17,
         "span": 6,
         "done": false
       },
       "6": {
-        "ti": 14,
+        "ti": 13,
         "span": 1,
         "done": false
       },
@@ -50,7 +49,7 @@
         "done": false
       },
       "11": {
-        "ti": 14,
+        "ti": 13,
         "span": 1,
         "done": false
       },
@@ -60,19 +59,19 @@
         "done": false
       },
       "32": {
-        "ti": 18,
+        "ti": 17,
         "span": 8,
         "done": false
       }
     },
     "2026-08-10": {
       "0": {
-        "ti": 18,
+        "ti": 17,
         "span": 10,
         "done": false
       },
       "32": {
-        "ti": 18,
+        "ti": 17,
         "span": 8,
         "done": false
       }
@@ -83,5 +82,5 @@
     "2026-08-06": [],
     "2026-08-10": []
   },
-  "updatedAt": 1786336733176
+  "updatedAt": 1786336761634
 }
