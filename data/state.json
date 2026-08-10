@@ -91,17 +91,17 @@
       "15": {
         "ti": 7,
         "span": 4,
-        "done": false
+        "done": true
       },
       "19": {
         "ti": 11,
         "span": 1,
-        "done": false
+        "done": true
       },
       "20": {
         "ti": 12,
         "span": 1,
-        "done": false
+        "done": true
       },
       "21": {
         "ti": 7,
@@ -138,5 +138,5 @@
     "2026-08-10": [],
     "2026-08-11": []
   },
-  "updatedAt": 1786340704011
+  "updatedAt": 1786360777372
 }
