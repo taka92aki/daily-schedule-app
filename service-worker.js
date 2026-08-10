@@ -1,10 +1,11 @@
-const CACHE = 'daily-schedule-v18';
+const CACHE = 'daily-schedule-v19';
 const ASSETS = [
   './mobile.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
+  './icons/favicon.ico',
 ];
 
 self.addEventListener('install', e => {
